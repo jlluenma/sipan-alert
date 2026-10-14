@@ -1,11 +1,11 @@
 {
   "model_version": "v1",
-  "trained_at": "2026-10-14T07:54:54+00:00",
+  "trained_at": "2026-10-14T07:56:52+00:00",
   "sklearn_version": "1.9.1",
   "note": "Métricas calculadas sobre un corpus 100% sintético redactado por el equipo. Las reglas baseline se escribieron conociendo esas mismas frases, por lo que la comparación las favorece. Estos valores NO representan el desempeño con mensajes reales y no deben presentarse como precisión del sistema.",
   "dataset": {
     "path": "data/dataset_v1.csv",
-    "sha256": "77be02a74dddef957491c18cbba201b776e46a5492babc92828684363f276130",
+    "sha256": "ef00d21391bb64079f323339cc86aa0d43ec5998bd439fc129e5734040eccc3b",
     "n_samples": 600,
     "sources": {
       "sintetico": 600

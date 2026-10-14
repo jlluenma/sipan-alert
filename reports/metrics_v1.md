@@ -3,8 +3,8 @@
 > **Aviso:** Métricas calculadas sobre un corpus 100% sintético redactado por el equipo. Las reglas baseline se escribieron conociendo esas mismas frases, por lo que la comparación las favorece. Estos valores NO representan el desempeño con mensajes reales y no deben presentarse como precisión del sistema.
 
 - Dataset: `data/dataset_v1.csv` (600 mensajes, fuentes: {'sintetico': 600})
-- SHA-256 del dataset: `77be02a74dddef957491c18cbba201b776e46a5492babc92828684363f276130`
-- Entrenado: 2026-10-14T07:54:54+00:00 · scikit-learn 1.9.1
+- SHA-256 del dataset: `ef00d21391bb64079f323339cc86aa0d43ec5998bd439fc129e5734040eccc3b`
+- Entrenado: 2026-10-14T07:56:52+00:00 · scikit-learn 1.9.1
 - Evaluación: GroupKFold(5) por grupo_similitud; predicciones fuera de fold
 
 ## Métricas por etiqueta

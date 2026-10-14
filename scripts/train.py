@@ -171,7 +171,7 @@ def write_markdown_report(metrics: dict, path: Path) -> None:
     for label, m in metrics["per_label"].items():
         c = m["ml_at_signal"]["confusion"]
         lines.append(f"| {label} | {c['tn']} | {c['fp']} | {c['fn']} | {c['tp']} |")
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
 
 def main() -> None:
@@ -219,7 +219,8 @@ def main() -> None:
         **metrics,
     }
     args.metrics_out.parent.mkdir(parents=True, exist_ok=True)
-    args.metrics_out.write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
+    args.metrics_out.write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n",
+                                encoding="utf-8", newline="\n")
     write_markdown_report(metrics, args.metrics_out.with_suffix(".md"))
 
     print(f"Modelo -> {args.model_out}")

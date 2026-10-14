@@ -339,7 +339,8 @@ def main() -> None:
 
     df = generate(args.n, args.seed)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(args.out, index=False, encoding="utf-8")
+    # LF fijo: el SHA-256 del dataset debe ser igual en Windows y Linux.
+    df.to_csv(args.out, index=False, encoding="utf-8", lineterminator="\n")
 
     print(f"{len(df)} mensajes -> {args.out}")
     print(df[list(config.LABELS)].sum().to_string())
