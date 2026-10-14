@@ -10,7 +10,7 @@ Proyecto del curso Innovación y Transformación Digital, UTP Chiclayo, 2026. **
 
 | Historia | Implementación |
 |---|---|
-| US-01: Pegar una oferta | Vista **Revisar mensaje**: valida texto vacío, longitud (10 a 3000 caracteres) y texto sin palabras. Ejemplos ficticios en un clic. |
+| US-01: Pegar una oferta | Formulario en **Inicio** y vista **Revisar mensaje**: valida texto vacío, longitud (10 a 3000 caracteres) y texto sin palabras. Ejemplos ficticios en un clic. |
 | US-02: Identificar señales | Clasificador multietiqueta TF-IDF + regresión logística (One-vs-Rest) junto con reglas documentadas. Si el modelo no está disponible, avisa y usa solo reglas. |
 | US-03: Entender por qué | Vista **Resultado**: el mensaje del usuario con las frases de riesgo **resaltadas y etiquetadas**, un veredicto en una línea y una tarjeta por señal con «Qué hacer» y «¿Por qué lo marcamos?» (origen, confianza y términos influyentes). |
 | US-04: Orientación | Vista **Qué hacer**: dos acciones por señal detectada, contactos con un toque para llamar o escribir (SBS 0-800-10840, MININTER 1818, PNP 105) y fuentes oficiales. |
@@ -57,7 +57,7 @@ En Linux o macOS: `python3 -m venv .venv` y `source .venv/bin/activate`.
 ### Otros comandos
 
 ```bash
-pytest                                 # 95 pruebas automáticas
+pytest                                 # 98 pruebas automáticas
 python scripts/generate_synthetic.py   # regenera data/dataset_v1.csv (determinista, semilla 42)
 ```
 
@@ -65,7 +65,7 @@ El modelo no se sube a git. Reentrenar con el mismo dataset reproduce exactament
 
 ### Ejemplos ficticios para la demo (Anexo C)
 
-La vista **Analizar mensaje** incluye estos ejemplos en «Usa un ejemplo ficticio»:
+La vista **Revisar mensaje** incluye estos ejemplos en «¿No tienes uno a la mano? Prueba un ejemplo»:
 
 | Mensaje | Señal esperada |
 |---|---|
@@ -86,8 +86,9 @@ sipan/                     Núcleo (no depende de Streamlit)
   analyzer.py              analyze(texto) -> AnalysisResult (ML + reglas + avisos)
   guidance.py              Textos de orientación, fuentes oficiales y contactos
 app/
-  streamlit_app.py         Entrada y navegación superior
-  theme.py                 Sistema visual: tokens, CSS y componentes HTML (burbuja con resaltados, tarjetas)
+  streamlit_app.py         Entrada y navegación (navbar y footer propios)
+  theme.py                 Sistema visual: tokens, CSS y componentes HTML (navbar, landing, burbuja con resaltados, tarjetas, footer)
+  assets/                  Logo e ilustraciones
   ui_common.py             Sesión, modelo cacheado y ejemplos
   views/                   inicio · analizar · resultado · orientacion
 data/
@@ -102,10 +103,10 @@ tests/                     pytest: entrada, anonimización, reglas, dataset, mod
 
 ## Diseño
 
-- **Idea central:** mostrar el sistema en vez de explicarlo. La portada presenta un mensaje ficticio con las frases de riesgo resaltadas por el analizador real, y el resultado usa esa misma burbuja con el mensaje del usuario.
+- **Idea central:** mostrar el sistema en vez de explicarlo. Inicio es una landing con el formulario de análisis arriba y un mensaje ficticio con las frases de riesgo resaltadas por el analizador real. El resultado usa esa misma burbuja con el mensaje del usuario.
 - **Tipografía:** Google Sans (Google Fonts), configurada en `.streamlit/config.toml`. Íconos: Material Symbols Rounded.
-- **Color:** tinta `#13293D`, turquesa `#0B7A75` para las acciones, oro Sipán `#C8922A` solo en la marca, y resaltador ámbar únicamente para las señales. Nunca se usa rojo de «peligro», para no comunicar una acusación.
-- **Accesibilidad:** pensado primero para el celular (sin scroll horizontal a 390 px), foco visible, animación de resaltado solo con `prefers-reduced-motion: no-preference` y todo el texto del usuario escapado.
+- **Color:** el rojo `#E52428` identifica la marca y las acciones principales, y se combina con grises neutros. Las señales se resaltan con un tono suave (`#FDE2E2`) y el lenguaje nunca acusa: el rojo es identidad visual, no un veredicto de «peligro».
+- **Accesibilidad:** diseño adaptable al celular, foco visible, animación de resaltado solo con `prefers-reduced-motion: no-preference` y todo el texto del usuario escapado.
 
 ## Cómo funciona el análisis
 
@@ -118,6 +119,51 @@ tests/                     pytest: entrada, anonimización, reglas, dataset, mod
 5. **Resultado:** cada señal indica su origen (modelo, regla o ambos) y lleva siempre el aviso de límites. Que no haya señales no significa que la oferta sea segura.
 
 **Evaluación sin fuga de datos:** `grupo_similitud` agrupa los mensajes por familia de redacción y cada fold de prueba usa frases que el modelo no vio al entrenar.
+
+## Ficha técnica
+
+| Aspecto | Término técnico | En SipánAlert IA |
+|---|---|---|
+| Tipo de sistema | **Sistema de apoyo a la decisión** | Orienta; la decisión es del usuario. |
+| Problema | **Clasificación de texto multietiqueta** (PLN), **aprendizaje supervisado** | Un mensaje puede tener varias de las 4 señales a la vez. |
+| Enfoque | **Sistema híbrido**: reglas + aprendizaje automático | Reglas interpretables (expresiones regulares con manejo de negación) y un modelo estadístico; se combinan sus resultados. |
+| Características | **Vectorización TF-IDF** con **n-gramas de palabras** (1–2) y **de caracteres** (3–5, `char_wb`), unidas con `FeatureUnion` | Los n-gramas de caracteres toleran errores de tipeo. |
+| Clasificador | **Regresión logística One-vs-Rest** (*binary relevance*), `class_weight="balanced"` | Un clasificador binario por etiqueta, con ponderación por desbalance de clases. |
+| Decisión | **Umbrales de decisión**; umbral de revisión calibrado con **F2** | Favorece el *recall*: prefiere avisar de más que dejar pasar una señal. |
+| Datos | **Datos sintéticos** generados de forma **determinista** (semilla 42) | Reproducibles; la revisión humana de una muestra está pendiente. |
+| Evaluación | **Validación cruzada agrupada** (`GroupKFold`) con **predicciones fuera de fold** | Evita la **fuga de datos** entre familias de redacción. Métrica principal: **F1 macro**, comparado contra las reglas como **línea base**. |
+| Arquitectura | **Arquitectura en capas**, **separación de responsabilidades**, **bajo acoplamiento** | `sipan/` (dominio) no depende de `app/` (presentación); la UI solo llama a `analyze()`. |
+| Configuración y textos | **Fuente única de verdad** | `sipan/config.py` (rutas, etiquetas, límites) y `sipan/guidance.py` (textos, contactos, enlaces). |
+| Ciclo del modelo | **Entrenamiento offline** e **inferencia en línea**; **serialización** con `joblib` | `scripts/train.py` entrena una vez; `analyze()` predice en cada consulta. |
+| Estado | **Aplicación sin estado** (*stateless*), **monolito local** | Sin base de datos; un solo proceso Streamlit. |
+| Seguridad | **Verificación de integridad** (SHA-256) contra **deserialización insegura**; **escape de HTML** contra **XSS** | El modelo solo se carga si su hash coincide; todo texto dinámico pasa por `html.escape`. |
+| Privacidad | **Privacidad desde el diseño**, **minimización de datos**, **anonimización de PII** | Se ocultan teléfonos, DNI, correos, enlaces y cuentas antes de analizar. |
+| Calidad | **Pruebas automatizadas** unitarias, de interfaz (`AppTest`) y de **regresión** | `pytest`; incluye pruebas de privacidad y de lenguaje sin certezas. |
+| Proceso | **Scrum/Scrumban**, **historias de usuario**; **GitHub Flow** | Sprints del APF2; ramas por cambio, *pull request* con revisión y `main` protegida. |
+
+## Limitaciones conocidas
+
+- **Corpus sintético:** las métricas no representan el desempeño con mensajes reales, y el ML (F1 macro 0,68) no supera a las reglas (0,94).
+- **Sesgo del corpus:** la apertura «sin aval y sin Infocorp» aparece en mensajes limpios y de riesgo, así que el modelo aprendió que es neutral (una **correlación espuria**).
+- **Ofertas que quitan los controles normales de un préstamo** («te regalamos plata», «sin revisión en Infocorp, sin garantías», tasas irrealmente bajas) hoy no se detectan.
+- **Titular del resultado:** si solo hay «posibles señales», el titular dice «No encontramos señales de alerta».
+
+Estas limitaciones están documentadas con su diagnóstico y una propuesta de corrección para un sprint posterior.
+
+## Cómo colaborar
+
+`main` está protegida: los cambios entran por *pull request* con una aprobación.
+
+```bash
+git checkout main
+git pull
+git checkout -b nombre-de-la-rama
+# ...cambios y commits...
+pytest
+git push -u origin nombre-de-la-rama
+```
+
+Después abre un PR hacia `main` en GitHub. Cuando se mergea, la rama se borra sola del remoto; para limpiar la copia local: `git fetch --prune` y `git branch -d nombre-de-la-rama`.
 
 ## Privacidad
 
