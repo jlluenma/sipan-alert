@@ -4,11 +4,9 @@ __pycache__/
 .venv/
 .pytest_cache/
 
-# Artefactos generados (se reproducen con scripts/train.py)
-models/*.joblib
-reports/*.json
+# Modelo entrenado: se regenera con scripts/train.py (no versionar pickles)
+models/*
 !models/.gitkeep
-!reports/.gitkeep
 
 # Datos: nunca versionar mensajes reales de usuarios
 data/raw/

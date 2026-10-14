@@ -6,6 +6,10 @@ gatherUsageStats = false
 # El análisis es solo de texto; no se aceptan archivos en S1.
 maxUploadSize = 1
 
+[client]
+# Oculta el botón "Deploy" y opciones de desarrollador al usuario final.
+toolbarMode = "viewer"
+
 [logger]
 level = "warning"
 

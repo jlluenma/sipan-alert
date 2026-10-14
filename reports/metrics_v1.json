@@ -1,0 +1,275 @@
+{
+  "model_version": "v1",
+  "trained_at": "2026-10-14T07:54:54+00:00",
+  "sklearn_version": "1.9.1",
+  "note": "Métricas calculadas sobre un corpus 100% sintético redactado por el equipo. Las reglas baseline se escribieron conociendo esas mismas frases, por lo que la comparación las favorece. Estos valores NO representan el desempeño con mensajes reales y no deben presentarse como precisión del sistema.",
+  "dataset": {
+    "path": "data/dataset_v1.csv",
+    "sha256": "77be02a74dddef957491c18cbba201b776e46a5492babc92828684363f276130",
+    "n_samples": 600,
+    "sources": {
+      "sintetico": 600
+    },
+    "positives": {
+      "pago_anticipado": 122,
+      "acceso_invasivo": 113,
+      "amenaza_presion": 174,
+      "condiciones_opacas": 202
+    }
+  },
+  "evaluation": "GroupKFold(5) por grupo_similitud; predicciones fuera de fold",
+  "per_label": {
+    "pago_anticipado": {
+      "threshold_review": 0.35,
+      "threshold_signal": 0.5,
+      "ml_at_0.5": {
+        "precision": 0.519,
+        "recall": 0.574,
+        "f1": 0.545,
+        "support": 122,
+        "confusion": {
+          "tn": 413,
+          "fp": 65,
+          "fn": 52,
+          "tp": 70
+        }
+      },
+      "ml_at_review": {
+        "precision": 0.391,
+        "recall": 0.902,
+        "f1": 0.546,
+        "support": 122,
+        "confusion": {
+          "tn": 307,
+          "fp": 171,
+          "fn": 12,
+          "tp": 110
+        }
+      },
+      "ml_at_signal": {
+        "precision": 0.519,
+        "recall": 0.574,
+        "f1": 0.545,
+        "support": 122,
+        "confusion": {
+          "tn": 413,
+          "fp": 65,
+          "fn": 52,
+          "tp": 70
+        }
+      },
+      "rules": {
+        "precision": 0.847,
+        "recall": 1.0,
+        "f1": 0.917,
+        "support": 122,
+        "confusion": {
+          "tn": 456,
+          "fp": 22,
+          "fn": 0,
+          "tp": 122
+        }
+      }
+    },
+    "acceso_invasivo": {
+      "threshold_review": 0.4,
+      "threshold_signal": 0.5,
+      "ml_at_0.5": {
+        "precision": 0.71,
+        "recall": 0.823,
+        "f1": 0.762,
+        "support": 113,
+        "confusion": {
+          "tn": 449,
+          "fp": 38,
+          "fn": 20,
+          "tp": 93
+        }
+      },
+      "ml_at_review": {
+        "precision": 0.643,
+        "recall": 0.876,
+        "f1": 0.742,
+        "support": 113,
+        "confusion": {
+          "tn": 432,
+          "fp": 55,
+          "fn": 14,
+          "tp": 99
+        }
+      },
+      "ml_at_signal": {
+        "precision": 0.71,
+        "recall": 0.823,
+        "f1": 0.762,
+        "support": 113,
+        "confusion": {
+          "tn": 449,
+          "fp": 38,
+          "fn": 20,
+          "tp": 93
+        }
+      },
+      "rules": {
+        "precision": 0.95,
+        "recall": 1.0,
+        "f1": 0.974,
+        "support": 113,
+        "confusion": {
+          "tn": 481,
+          "fp": 6,
+          "fn": 0,
+          "tp": 113
+        }
+      }
+    },
+    "amenaza_presion": {
+      "threshold_review": 0.35,
+      "threshold_signal": 0.5,
+      "ml_at_0.5": {
+        "precision": 0.58,
+        "recall": 0.69,
+        "f1": 0.63,
+        "support": 174,
+        "confusion": {
+          "tn": 339,
+          "fp": 87,
+          "fn": 54,
+          "tp": 120
+        }
+      },
+      "ml_at_review": {
+        "precision": 0.412,
+        "recall": 0.862,
+        "f1": 0.558,
+        "support": 174,
+        "confusion": {
+          "tn": 212,
+          "fp": 214,
+          "fn": 24,
+          "tp": 150
+        }
+      },
+      "ml_at_signal": {
+        "precision": 0.58,
+        "recall": 0.69,
+        "f1": 0.63,
+        "support": 174,
+        "confusion": {
+          "tn": 339,
+          "fp": 87,
+          "fn": 54,
+          "tp": 120
+        }
+      },
+      "rules": {
+        "precision": 1.0,
+        "recall": 0.862,
+        "f1": 0.926,
+        "support": 174,
+        "confusion": {
+          "tn": 426,
+          "fp": 0,
+          "fn": 24,
+          "tp": 150
+        }
+      }
+    },
+    "condiciones_opacas": {
+      "threshold_review": 0.3,
+      "threshold_signal": 0.5,
+      "ml_at_0.5": {
+        "precision": 0.894,
+        "recall": 0.713,
+        "f1": 0.793,
+        "support": 202,
+        "confusion": {
+          "tn": 381,
+          "fp": 17,
+          "fn": 58,
+          "tp": 144
+        }
+      },
+      "ml_at_review": {
+        "precision": 0.615,
+        "recall": 0.995,
+        "f1": 0.76,
+        "support": 202,
+        "confusion": {
+          "tn": 272,
+          "fp": 126,
+          "fn": 1,
+          "tp": 201
+        }
+      },
+      "ml_at_signal": {
+        "precision": 0.894,
+        "recall": 0.713,
+        "f1": 0.793,
+        "support": 202,
+        "confusion": {
+          "tn": 381,
+          "fp": 17,
+          "fn": 58,
+          "tp": 144
+        }
+      },
+      "rules": {
+        "precision": 0.965,
+        "recall": 0.95,
+        "f1": 0.958,
+        "support": 202,
+        "confusion": {
+          "tn": 391,
+          "fp": 7,
+          "fn": 10,
+          "tp": 192
+        }
+      }
+    }
+  },
+  "macro_f1": {
+    "ml_at_0.5": 0.682,
+    "ml_at_review": 0.651,
+    "ml_at_signal": 0.682,
+    "rules": 0.944
+  },
+  "ml_macro_f1_per_fold_at_0.5": {
+    "values": [
+      0.601,
+      0.557,
+      0.741,
+      0.692,
+      0.758
+    ],
+    "mean": 0.67,
+    "std": 0.079
+  },
+  "any_signal": {
+    "ml_at_signal": {
+      "precision": 0.792,
+      "recall": 0.836,
+      "f1": 0.813,
+      "support": 336,
+      "confusion": {
+        "tn": 190,
+        "fp": 74,
+        "fn": 55,
+        "tp": 281
+      }
+    },
+    "rules": {
+      "precision": 0.946,
+      "recall": 0.988,
+      "f1": 0.967,
+      "support": 336,
+      "confusion": {
+        "tn": 245,
+        "fp": 19,
+        "fn": 4,
+        "tp": 332
+      }
+    }
+  },
+  "threshold_note": "Umbrales elegidos sobre las mismas predicciones fuera de fold: las métricas 'ml_at_review' y 'ml_at_signal' pueden ser algo optimistas."
+}
