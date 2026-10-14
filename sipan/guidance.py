@@ -144,6 +144,10 @@ NO_SIGNALS_NOTICE = (
     "No se observaron las señales definidas en este texto. Esto no garantiza que la oferta sea segura: "
     "el análisis solo cubre lo que dice el mensaje."
 )
+MODEL_UNAVAILABLE_NOTICE = (
+    "El modelo de Machine Learning no está disponible en este momento; "
+    "el resultado se basa solo en reglas documentadas."
+)
 SYNTHETIC_MODEL_NOTICE = (
     "Prototipo académico: el modelo se entrenó con mensajes sintéticos y puede equivocarse con "
     "redacciones nuevas."

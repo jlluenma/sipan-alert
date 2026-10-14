@@ -5,7 +5,10 @@ Todo texto dinámico (en especial el mensaje del usuario) pasa por `html.escape`
 
 from __future__ import annotations
 
+import base64
+from functools import lru_cache
 from html import escape
+from pathlib import Path
 
 import streamlit as st
 
@@ -17,18 +20,20 @@ CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,500,0..1,0&display=block');
 
 :root {
-  --sa-ink: #13293D;
-  --sa-muted: #536475;
-  --sa-line: #DDE3E8;
+  --sa-shell: 1280px;
+  --sa-gutter: clamp(1.5rem, 5vw, 4.5rem);
+  --sa-ink: #222B39;
+  --sa-muted: #687386;
+  --sa-line: #E5E7EB;
   --sa-surface: #FFFFFF;
-  --sa-bg: #F5F7F8;
-  --sa-teal: #0B7A75;
-  --sa-teal-soft: #E2F1F0;
+  --sa-bg: #F4F5F7;
+  --sa-teal: #E52428;
+  --sa-teal-soft: #FFF0F0;
   --sa-gold: #C8922A;
-  --sa-mark: #FFE6B8;
-  --sa-alert: #C2410C;
-  --sa-alert-ink: #8A2E08;
-  --sa-chat: #E4EBEE;
+  --sa-mark: #FDE2E2;
+  --sa-alert: #E52428;
+  --sa-alert-ink: #A81319;
+  --sa-chat: #F1F2F4;
 }
 
 [data-testid="stMainBlockContainer"] { max-width: 760px; padding-top: 5.25rem; padding-bottom: 5rem; }
@@ -142,6 +147,238 @@ CSS = """
   .sa-mark { animation: sa-mark-in .7s ease-out both; animation-delay: calc(var(--i, 0) * 220ms + 250ms); }
   @keyframes sa-mark-in { from { background-color: transparent; border-bottom-color: transparent; } }
 }
+
+/* SipánAlert responsive landing page (Figma reference) */
+[data-testid="stMainBlockContainer"] { max-width: none; padding: 0 0 3rem; }
+[data-testid="stMainBlockContainer"]:has(.sa-footer) { padding-bottom: 0; }
+[data-testid="stAppViewContainer"] { background: #fff; }
+[data-testid="stHeader"] { display: none; }
+[data-testid="stToolbar"] { display: none; }
+[data-testid="stMainMenu"] { display: none; }
+.st-key-sa-navbar { box-sizing: border-box; height: 76px; min-height: 76px; justify-content: center; background: #fff; border-bottom: 1px solid #ECEDEF; padding: 0 64px; }
+.st-key-sa-navbar [data-testid="stHorizontalBlock"] { width: 100%; max-width: none; margin: 0; align-items: center; gap: 40px; }
+.st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] { width: auto !important; max-width: none !important; flex: 0 0 auto !important; }
+.st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child { width: 195px !important; max-width: 195px !important; flex: 0 0 195px !important; }
+.st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2) { margin-left: auto; }
+.st-key-sa-navbar [data-testid="stPageLink"] a, .st-key-sa-navbar .stMarkdown a, .st-key-sa-navbar .sa-nav-link { color: #222B39 !important; background: transparent !important; border-radius: 4px; padding: .35rem .2rem; font-size: .88rem; text-decoration: none !important; }
+.st-key-sa-navbar [data-testid="stPageLink"] a:hover, .st-key-sa-navbar .stMarkdown a:hover, .st-key-sa-navbar .sa-nav-link:hover { color: #E52428 !important; text-decoration: underline !important; }
+.st-key-sa-navbar { position: relative; }
+.st-key-sa-navbar .st-key-sa-logo-click { position: absolute !important; top: 0; left: 64px; z-index: 20; width: 195px; height: 76px; pointer-events: auto; }
+.st-key-sa-logo-click [data-testid="stVerticalBlock"] { position: relative; width: 100%; height: 100%; min-height: 100%; gap: 0 !important; }
+.st-key-sa-logo-click [data-testid="stElementContainer"]:has([data-testid="stButton"]) { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; }
+.st-key-sa-logo-click [data-testid="stButton"], .st-key-sa-logo-click [data-testid="stButton"] button { display: block; width: 100%; height: 100%; pointer-events: auto; }
+.st-key-sa-logo-click [data-testid="stButton"] button { color: transparent !important; background: transparent !important; border: 0 !important; padding: 0 !important; font-size: 0 !important; box-shadow: none !important; }
+.st-key-sa-logo-click [data-testid="stButton"] button:focus-visible { outline: 2px solid #E52428; outline-offset: -3px; }
+.sa-brand-link--native { pointer-events: none; }
+.st-key-sa-footer-shell { position: relative; }
+.st-key-sa-footer-shell .st-key-sa-footer-logo-click { position: absolute !important; top: 3.5rem; left: clamp(24px, 4vw, 64px); z-index: 20; width: 200px; height: 64px; }
+.st-key-sa-footer-logo-click [data-testid="stVerticalBlock"] { position: relative; width: 100%; height: 100%; min-height: 100%; gap: 0 !important; }
+.st-key-sa-footer-logo-click [data-testid="stElementContainer"]:has([data-testid="stButton"]) { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; }
+.st-key-sa-footer-logo-click [data-testid="stButton"], .st-key-sa-footer-logo-click [data-testid="stButton"] button { display: block; width: 100%; height: 100%; }
+.st-key-sa-footer-logo-click [data-testid="stButton"] button { color: transparent !important; background: transparent !important; border: 0 !important; padding: 0 !important; font-size: 0 !important; box-shadow: none !important; }
+.st-key-sa-footer-logo-click [data-testid="stButton"] button:focus-visible { outline: 2px solid #fff !important; outline-offset: -3px; }
+.sa-footer-logo-link--native { pointer-events: none; }
+[data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > [data-testid="stLayoutWrapper"]:has(.st-key-sa-hero-wrap) { margin-top: -1rem; }
+.st-key-sa-hero-wrap { box-sizing: border-box; background: linear-gradient(90deg, #7B1111 0%, #DC2626 55%, #8B1A1A 100%); padding: 1.25rem max(0px, calc((100vw - var(--sa-shell))/2)) 1.5rem; border-radius: 0; }
+.st-key-sa-hero-wrap [data-testid="stVerticalBlock"] { gap: .45rem !important; }
+.sa-hero { max-width: 1180px; margin: 0 auto; text-align: center; color: #fff; }
+.sa-hero__eyebrow { margin: 0 0 .5rem; color: #fff; font-size: .77rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.sa-hero h1 { color: #fff; max-width: 620px; margin: 0 auto .45rem; font-size: clamp(2.1rem,3.5vw,2.6rem); line-height: 1.1; letter-spacing: -.035em; font-weight: 750; }
+.sa-hero .sa-lead { margin: 0 auto; color: #fff; font-size: 1rem; line-height: 1.45; }
+.sa-hero-form { max-width: 1020px; margin: .8rem auto 0; }
+.st-key-sa-hero-form { box-sizing: border-box; width: min(100%, 1020px); margin: 0 auto; background: #fff; border: 1px solid rgba(255,255,255,.35); border-radius: 16px; padding: .85rem 1.15rem .55rem; box-shadow: 0 14px 40px rgba(71,13,16,.12); }
+.st-key-sa-hero-form [data-testid="stVerticalBlock"] { gap: .5rem !important; }
+.st-key-sa-hero-form [data-testid="stTextArea"] label { color: #273142; font-size: .85rem; font-weight: 650; }
+.st-key-sa-hero-form [data-testid="stTextArea"] textarea { height: 94px !important; min-height: 94px; border: 1px solid #AEB5C0; border-radius: 6px; font-size: .93rem; }
+.st-key-sa-hero-form [data-testid="stTextArea"] textarea:focus { border-color: var(--sa-teal); box-shadow: 0 0 0 2px rgba(229,36,40,.18); }
+.st-key-sa-hero-form [data-testid="stButton"] { display: flex; justify-content: flex-end; }
+.st-key-sa-hero-form [data-testid="stButton"] button[kind="primary"] { width: auto !important; min-width: 120px; min-height: 40px; border-radius: 8px; padding-inline: 1.1rem; background: #E52428; border-color: #E52428; font-weight: 650; }
+.st-key-sa-hero-form [data-testid="stButton"] button[kind="primary"]:hover { background: #BD171C; border-color: #BD171C; }
+.sa-form-bottom { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: -.45rem; }
+.sa-example-link { color: #B5161A; font-size: .84rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.sa-privacy { color: #536071; font-size: .8rem; margin: .15rem 0 .2rem; }
+.st-key-sa-hero-wrap [data-testid="stAlert"] { box-sizing: border-box; display: flex; align-items: center; width: min(100%, 1020px); min-height: 2rem; margin: .2rem auto 0; padding: .2rem .7rem !important; border-radius: 8px; background: #FFF8E7 !important; color: #49370A !important; border: 1px solid #EAD9A6; border-left: 3px solid #B7791F; font-size: .84rem; line-height: 1.4; }
+.st-key-sa-hero-wrap [data-testid="stAlert"] p { margin-block: 0 !important; }
+.st-key-sa-hero-wrap [data-testid="stAlert"] svg { width: 1.1rem; height: 1.1rem; }
+.st-key-sa-hero-wrap [data-testid="stAlert"] * { color: #222B39 !important; }
+.sa-brand { display: flex; align-items: center; gap: .5rem; margin: 0; color: var(--sa-ink); font-size: 1.35rem; line-height: 1; font-weight: 750; }
+.sa-brand-link { display: inline-flex; color: inherit; text-decoration: none; }
+.sa-brand img { width: 43px; height: 43px; object-fit: contain; }
+.sa-brand__alert { color: #E52428; }
+.sa-brand sup { align-self: center; font-size: .5rem; margin: .8rem 0 0 -.35rem; letter-spacing: -.02em; }
+.sa-nav { max-width: 1180px; padding: .55rem 0; margin: 0 auto; align-items: center; }
+.sa-nav [data-testid="stPageLink"] a, .sa-nav .stMarkdown a { color: #202938 !important; font-size: .88rem; text-decoration: none; }
+.sa-nav [data-testid="stPageLink"] a:hover, .sa-nav .stMarkdown a:hover { color: #E52428 !important; text-decoration: underline; }
+.sa-nav .stButton button { background: transparent; border: 0; color: #202938; min-height: 2.6rem; padding: .25rem .4rem; }
+.sa-nav .stButton button:hover { color: #E52428; background: transparent; }
+.sa-home-section { box-sizing: border-box; width: min(100%, var(--sa-shell)); margin: 0 auto; padding: 3.25rem var(--sa-gutter); }
+.sa-home-section--soft { max-width: var(--sa-shell); background: #FFFFFF; padding: .5rem clamp(1.15rem, 4.5vw, 4.5rem) 3.25rem; }
+#ejemplo-analisis.sa-home-section { padding-bottom: 6rem; }
+.sa-example-fine { max-width: 850px; margin: 1.6rem auto 0; text-align: center; }
+.sa-section-inner { max-width: 1180px; margin: 0 auto; }
+.sa-kicker { color: #B5161A; font-size: .72rem; line-height: 1.3; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; text-align: center; margin: 0 0 .5rem; }
+.sa-home-title { color: #222B39; text-align: center; font-size: clamp(1.8rem,3.6vw,2.55rem); line-height: 1.15; letter-spacing: -.025em; margin: 0 0 .45rem; }
+.sa-home-subtitle { color: #687386; text-align: center; margin: 0 auto 1.65rem; font-size: .98rem; }
+.sa-how-grid { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(260px,.8fr); gap: 3rem; align-items: center; margin-top: 1.8rem; }
+.sa-step-list { display: grid; gap: 1.3rem; margin: 0; padding: 0; list-style: none; }
+.sa-step { display: grid; grid-template-columns: 2.2rem 1fr; column-gap: .8rem; align-items: start; color: #222B39; }
+.sa-step__number { font-size: 1.1rem; font-weight: 750; }
+.sa-step h3 { font-size: 1.05rem; line-height: 1.25; margin: 0 0 .25rem; }
+.sa-step p { color: #687386; font-size: .9rem; line-height: 1.5; margin: 0; max-width: 32rem; }
+.sa-how-image { display: block; width: min(100%,390px); height: auto; justify-self: center; }
+.sa-example-panel { display: grid; grid-template-columns: minmax(0,1.8fr) minmax(0,1fr); gap: 2rem; align-items: center; width: min(100%, 850px); margin: 1.4rem auto 0; }
+.sa-example-device { background: #F1F2F4; border-radius: 16px; padding: 1.5rem; }
+.sa-example-device .sa-chat { margin: 0; background: transparent; padding: 0; }
+.sa-example-device .sa-chat__from { display: none; }
+.sa-example-device .sa-bubble { max-width: none; border-radius: 10px; font-size: 1.08rem; line-height: 1.55; padding: 1rem; box-shadow: none; }
+.sa-example-label { color: #202938; font-size: .82rem; font-weight: 650; margin: 0 0 .8rem; }
+.sa-example-message { background: #fff; border-radius: 10px; padding: 1rem; font-size: 1.08rem; line-height: 1.55; color: #30394A; margin: 0; }
+.sa-example-message mark { color: inherit; background: transparent; border-bottom: 2px solid #E52428; padding: 0; }
+.sa-example-signals { display: grid; gap: 1.3rem; }
+.sa-example-signals h3 { color: #222B39; font-size: 1.05rem; margin: 0 0 .18rem; }
+.sa-example-signals p { color: #687386; font-size: .88rem; margin: 0; }
+.sa-protect-heading { text-align: center; margin-bottom: 2rem; }
+.sa-protect-heading .sa-home-title { font-size: clamp(1.6rem, 2.4vw, 1.9rem); line-height: 1.2; margin-bottom: .45rem; }
+.sa-protect-heading .sa-home-subtitle { font-size: .82rem; margin: 0 auto; }
+.sa-protect-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1.15rem; }
+.sa-protect-card { box-sizing: border-box; min-height: 220px; display: flex; flex-direction: column; align-items: flex-start; padding: 1.65rem 1.7rem; border: 1px solid #E9EBEF; border-radius: 18px; background: #fff; box-shadow: none; }
+.sa-protect-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 11px; margin: 0 0 1rem; color: #fff; background: #E52428; box-shadow: 5px -4px 0 #FDE2E2; }
+.sa-protect-icon .sa-icon { font-size: 1.45rem; vertical-align: 0; font-variation-settings: 'FILL' 0; }
+.sa-protect-card h3 { margin: 0 0 .4rem; font-size: 1.08rem; line-height: 1.3; color: #222B39; }
+.sa-protect-card p { margin: 0; color: #536071; font-size: .78rem; line-height: 1.5; }
+.sa-protect-card b { display: block; margin-top: auto; padding-top: 1.1rem; color: #E52428; font-size: .68rem; line-height: 1.3; }
+.sa-cta-row { display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; align-items: center; }
+.sa-cta-row h2 { margin: 0 0 .35rem; font-size: clamp(1.45rem,3vw,2rem); color: #222B39; }
+.sa-cta-row p { margin: 0; color: #4E596A; font-size: .93rem; }
+.st-key-sa-cta { box-sizing: border-box; width: 100%; max-width: none; margin: 0; padding: 1.5rem var(--sa-gutter); background: #F4F5F7; }
+.st-key-sa-cta-footer, .st-key-sa-cta-footer [data-testid="stVerticalBlock"] { gap: 0 !important; }
+.st-key-sa-cta [data-testid="stHorizontalBlock"] { align-items: center; max-width: 1180px; margin: 0 auto; gap: 1rem; }
+.st-key-sa-cta [data-testid="stElementContainer"]:has([data-testid="stPageLink"]) { width: 100%; align-self: stretch; }
+.st-key-sa-cta [data-testid="stPageLink"] { display: flex; justify-content: flex-end; }
+.st-key-sa-cta [data-testid="stPageLink"] a { box-sizing: border-box; display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: auto; min-height: 2.5rem; margin-left: auto; color: #fff !important; background: #E52428; border: 1px solid #E52428; border-radius: 8px; padding: .55rem 1rem; font-size: .82rem; line-height: 1.2; font-weight: 650; text-decoration: none; }
+.st-key-sa-cta [data-testid="stPageLink"] a p { margin: 0; color: #fff !important; font-size: inherit; line-height: inherit; }
+.st-key-sa-cta [data-testid="stPageLink"] a:hover { background: #BD171C; border-color: #BD171C; }
+.sa-footer { box-sizing: border-box; width: 100%; margin: 0; padding: 3.5rem 0 2rem; color: #fff; background: #DC2626; }
+.sa-footer__content { box-sizing: border-box; width: min(calc(100% - 2 * clamp(24px, 4vw, 64px)), 1280px); margin-inline: auto; }
+.sa-footer-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 3rem; }
+.sa-footer-logo { width: min(200px,100%); height: auto; object-fit: contain; object-position: left center; }
+.sa-footer .sa-footer-logo-link { display: inline-flex; width: fit-content; margin: 0; }
+.sa-footer p { color: #fff; font-size: .92rem; line-height: 1.6; }
+.sa-footer h3 { color: #fff; font-size: .95rem; margin: .1rem 0 .95rem; }
+.sa-footer a { display: block; color: #fff !important; text-decoration: none; font-size: .92rem; margin: 0 0 .85rem; }
+.sa-footer a:hover { text-decoration: underline; }
+.sa-footer-copy { border-top: 1px solid rgba(255,255,255,.3); margin: 1.15rem 0 0; padding-top: .8rem; font-size: .74rem; color: rgba(255,255,255,.92); }
+.sa-page { max-width: 920px; margin: 2.2rem auto 1rem; padding: 0 1rem; }
+.sa-page h1 { color: #222B39; }
+.sa-signal { box-shadow: 0 8px 22px rgba(48,27,30,.045); }
+.sa-verdict--alert { background: #FFF0F0; color: #A81319; }
+.sa-verdict--alert .sa-icon { color: #E52428; }
+.sa-verdict--alert p { color: #6F282B; }
+.sa-verdict--clear { background: #F1F2F4; color: #273142; }
+.sa-verdict--clear .sa-icon { color: #687386; }
+.sa-signal__icon { background: #FFF0F0; color: #E52428; }
+.sa-signal__do strong, .sa-signal summary, .sa-sources a, .sa-contact__value { color: #D21F24; }
+.sa-checklist .sa-icon { color: #E52428; }
+.sa-contact:hover { border-color: #E52428; }
+.sa-contact:focus-visible, .sa-signal summary:focus-visible { outline-color: #E52428; }
+.stButton button:focus-visible, a:focus-visible, [data-testid="stPageLink"] a:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid #111827 !important; outline-offset: 3px !important; }
+
+/* Páginas secundarias: análisis, resultado y orientación */
+.st-key-sa-page-content {
+  box-sizing: border-box; width: min(100%, 1080px); max-width: 1080px;
+  margin-inline: auto; padding: 2.6rem 2rem 3rem;
+}
+.st-key-sa-page-content .sa-page {
+  max-width: none; margin: 0 0 1.2rem; padding: 0;
+}
+.st-key-sa-page-content .sa-page h1 {
+  font-size: clamp(2rem, 4vw, 2.55rem); line-height: 1.12; letter-spacing: -.035em;
+}
+.st-key-sa-page-content .sa-page p { font-size: 1rem; line-height: 1.55; }
+.st-key-sa-page-content [data-testid="stTextArea"] textarea {
+  box-sizing: border-box; border: 1px solid #D6DAE1; border-radius: 12px;
+  padding: 1rem 1.1rem; background: #fff; font-size: .98rem; line-height: 1.6;
+}
+.st-key-sa-page-content [data-testid="stTextArea"] textarea:focus {
+  border-color: #E52428; box-shadow: 0 0 0 3px rgba(229,36,40,.12);
+}
+.st-key-sa-page-content [data-testid="stAlert"] {
+  border-radius: 10px; border-left: 3px solid #C8922A; background: #FFF8E7;
+}
+.st-key-sa-page-content [data-testid="stButton"] button[kind="primary"] {
+  border-radius: 8px; border-color: #E52428; background: #E52428; font-weight: 650;
+}
+.st-key-sa-page-content [data-testid="stButton"] button[kind="primary"]:hover {
+  border-color: #BD171C; background: #BD171C;
+}
+.st-key-sa-page-content .sa-verdict {
+  border: 1px solid rgba(229,36,40,.12); border-radius: 14px; padding: 1.25rem 1.4rem;
+}
+.st-key-sa-page-content .sa-chat {
+  border: 1px solid #E9EBEF; border-radius: 16px; padding: 1.25rem;
+}
+.st-key-sa-page-content .sa-section-title {
+  margin: 2rem 0 .8rem; font-size: 1.2rem; letter-spacing: -.015em;
+}
+.st-key-sa-page-content .sa-checklist {
+  padding: .35rem 1.2rem !important; border: 1px solid #E9EBEF; border-radius: 14px; background: #F7F8FA;
+}
+.st-key-sa-page-content .sa-checklist li { padding: .85rem 0; }
+.st-key-sa-page-content .sa-contacts { gap: 1rem; }
+.st-key-sa-page-content .sa-contact {
+  padding: 1.1rem 1.2rem; border-radius: 14px; box-shadow: 0 5px 18px rgba(34,43,57,.04);
+}
+.st-key-sa-page-content .sa-sources {
+  padding: .35rem 1.2rem !important; border: 1px solid #E9EBEF; border-radius: 14px; background: #F7F8FA;
+}
+.st-key-sa-page-content .sa-sources li + li { border-top: 1px solid #E5E7EB; }
+.st-key-sa-page-content .sa-fine { margin-top: 1.5rem; }
+@media (max-width: 700px) {
+  .st-key-sa-hero-wrap { padding: 1.1rem 1rem 1.25rem; }
+  .sa-hero h1 { font-size: clamp(2rem,8vw,2.5rem); }
+  .st-key-sa-hero-form { padding: .8rem .85rem .55rem; }
+  .st-key-sa-navbar { padding-inline: 1rem; }
+  .st-key-sa-navbar .st-key-sa-logo-click { left: 1rem; width: min(195px, 36vw); }
+  .st-key-sa-footer-shell .st-key-sa-footer-logo-click { top: 2.25rem; left: 18px; }
+  .st-key-sa-navbar [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: clamp(4px, 1vw, 10px); }
+  .st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] { min-width: 0 !important; }
+  .st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child { width: min(195px, 36vw) !important; max-width: min(195px, 36vw) !important; flex-basis: min(195px, 36vw) !important; }
+  .st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2) { margin-left: auto; }
+  .st-key-sa-navbar [data-testid="stPageLink"] a, .st-key-sa-navbar .stMarkdown a { font-size: .77rem; }
+  .sa-nav [data-testid="stPageLink"] a, .sa-nav .stMarkdown a { font-size: .77rem; }
+  .sa-brand { font-size: 1.05rem; gap: .3rem; }
+  .sa-brand img { width: 34px; height: 34px; }
+  .sa-home-section { padding: 2.6rem 1.15rem; }
+  #ejemplo-analisis.sa-home-section { padding-bottom: 5rem; }
+  .sa-example-panel { width: 100%; grid-template-columns: 1fr; gap: 1.4rem; }
+  .sa-protect-grid { grid-template-columns: 1fr; gap: .8rem; }
+  .sa-protect-card { min-height: 0; }
+  .sa-protect-card b { margin-top: 1.1rem; }
+  .sa-cta-row { grid-template-columns: 1fr; }
+  .st-key-sa-cta { padding: 1.35rem 1.15rem; }
+  .st-key-sa-cta [data-testid="stHorizontalBlock"] { flex-direction: column; gap: .75rem; }
+  .st-key-sa-cta [data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; }
+  .st-key-sa-cta [data-testid="stPageLink"] { justify-content: center; }
+  .st-key-sa-cta [data-testid="stPageLink"] a { margin-inline: auto; }
+  .sa-footer__content { width: min(calc(100% - 36px), 1160px); }
+  .sa-footer { padding: 2.25rem 0 1.25rem; }
+  .sa-footer-logo { width: min(200px,100%); }
+  .sa-footer-grid { grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+  .sa-footer-grid > :first-child { grid-column: 1 / -1; }
+  .sa-steps { grid-template-columns: 1fr; }
+  .st-key-sa-page-content { width: 100%; padding: 1.8rem 1.15rem 3rem; }
+  .st-key-sa-page-content .sa-page { margin-bottom: .9rem; }
+  .st-key-sa-page-content .sa-section-title { margin-top: 1.55rem; }
+  .st-key-sa-page-content .sa-checklist { padding-inline: .9rem !important; }
+}
+@media (max-width: 390px) {
+  .sa-brand sup { display: none; }
+  .st-key-sa-navbar [data-testid="stPageLink"] a, .st-key-sa-navbar .stMarkdown a { font-size: .7rem; }
+  .sa-nav [data-testid="stPageLink"] a, .sa-nav .stMarkdown a { font-size: .7rem; }
+  .sa-footer-grid { grid-template-columns: 1fr; }
+  .sa-footer-grid > :first-child { grid-column: auto; }
+  .sa-home-section { padding-inline: 1rem; }
+}
 </style>
 """
 
@@ -154,8 +391,105 @@ def icon(name: str) -> str:
     return f'<span class="sa-icon" aria-hidden="true">{escape(name)}</span>'
 
 
-def brand() -> str:
-    return f'<div class="sa-brand">{icon("verified_user")}SipánAlert IA</div>'
+@lru_cache(maxsize=None)
+def _asset_b64(name: str) -> str:
+    return base64.b64encode((Path(__file__).resolve().parent / "assets" / name).read_bytes()).decode("ascii")
+
+
+def _home_anchor(anchor: str, is_home: bool) -> str:
+    """Las secciones viven en Inicio: desde otras páginas el ancla vuelve a Inicio."""
+    return f"#{anchor}" if is_home else f"/#{anchor}"
+
+
+def brand(*, is_home: bool) -> str:
+    logo = _asset_b64("logo-icon.png")
+    href = "#top" if is_home else "/"
+    native_class = "" if is_home else " sa-brand-link--native"
+    native_attrs = "" if is_home else ' tabindex="-1" aria-hidden="true"'
+    return (f'<a class="sa-brand-link{native_class}" href="{href}" aria-label="SipánAlert IA, ir al inicio"{native_attrs}>'
+            f'<div class="sa-brand"><img src="data:image/png;base64,{logo}" '
+            'alt="Escudo SipánAlert IA"><span>Sipán<span class="sa-brand__alert">Alert</span></span>'
+            '<sup>IA</sup></div></a>')
+
+
+def navbar(home_path: str, guidance_path: str, *, is_home: bool) -> None:
+    with st.container(key="sa-navbar"):
+        logo_col, home_col, how_col, guide_col = st.columns([2.5, .75, 1.2, .95], vertical_alignment="center")
+        with logo_col:
+            st.html(brand(is_home=is_home))
+        with home_col:
+            st.page_link(home_path, label="Inicio")
+        with how_col:
+            st.html(f'<a class="sa-nav-link" href="{_home_anchor("como-funciona", is_home)}">Cómo funciona</a>')
+        with guide_col:
+            st.page_link(guidance_path, label="Qué hacer")
+        if not is_home:
+            with st.container(key="sa-logo-click"):
+                st.button("SipánAlert IA, ir al inicio", key="sa-logo-home-button", on_click=st.switch_page, args=[home_path])
+
+
+def landing_sections(example: AnalysisResult) -> str:
+    """Secciones de Inicio. Las señales del ejemplo salen del analizador, no se escriben a mano."""
+    illustration = _asset_b64("how-it-works.png")
+    example_signals = "".join(
+        f"<div><h3>{escape(guidance.LABEL_INFO[s.label].short)}</h3>"
+        f"<p>{escape(guidance.LABEL_INFO[s.label].title)}.</p></div>"
+        for s in example.signals
+    )
+    return (
+        '<section class="sa-home-section" id="como-funciona">'
+        '<p class="sa-kicker">Cómo funciona</p>'
+        '<h2 class="sa-home-title">Revisa una oferta en tres pasos</h2>'
+        '<p class="sa-home-subtitle">Analiza el texto de una oferta de préstamo y revisa posibles señales de riesgo.</p>'
+        '<div class="sa-how-grid"><ol class="sa-step-list">'
+        '<li class="sa-step"><span class="sa-step__number">01</span><div><h3>Pega la oferta</h3><p>Copia el texto del préstamo que recibiste en WhatsApp, SMS, correo o redes sociales.</p></div></li>'
+        '<li class="sa-step"><span class="sa-step__number">02</span><div><h3>Analiza las señales</h3><p>El sistema evalúa posibles patrones de riesgo mediante inteligencia artificial y reglas documentadas.</p></div></li>'
+        '<li class="sa-step"><span class="sa-step__number">03</span><div><h3>Comprende el resultado</h3><p>Revisa las señales identificadas y recibe orientación preventiva.</p></div></li>'
+        f'</ol><img class="sa-how-image" src="data:image/png;base64,{illustration}" alt="Una mano sostiene un teléfono junto a una señal amarilla de advertencia"></div></section>'
+        '<section class="sa-home-section" id="ejemplo-analisis"><p class="sa-kicker">Ejemplo de análisis</p>'
+        '<h2 class="sa-home-title">¿Qué señales puede ocultar una oferta?</h2>'
+        '<p class="sa-home-subtitle">Observa este ejemplo ficticio y aprende a reconocer posibles riesgos.</p>'
+        '<div class="sa-example-panel"><div class="sa-example-device"><p class="sa-example-label">Oferta de préstamo · Ejemplo ficticio</p>'
+        + chat_bubble(example.analyzed_text, example.highlights, sender="Mensaje ficticio")
+        + f'</div><div class="sa-example-signals">{example_signals}</div></div>'
+        f'<p class="sa-fine sa-example-fine">{escape(guidance.LIMITS_SHORT)} Prototipo académico de la UTP Chiclayo.</p></section>'
+        '<section class="sa-home-section sa-home-section--soft" id="privacidad"><div class="sa-section-inner">'
+        '<div class="sa-protect-heading"><h2 class="sa-home-title">Tu información merece protección</h2><p class="sa-home-subtitle">Revisa ofertas de préstamo sin proporcionar datos personales.</p></div>'
+        '<div class="sa-protect-grid"><article class="sa-protect-card"><span class="sa-protect-icon">'
+        f'{icon("person_off")}</span><h3>Sin registro</h3><p>Usa el analizador sin crear cuentas.</p><b>Sin cuenta ni DNI</b></article>'
+        '<article class="sa-protect-card"><span class="sa-protect-icon">'
+        f'{icon("lock")}</span><h3>Datos ocultos</h3><p>Antes de revisar el mensaje ocultamos teléfonos, DNI, correos y cuentas.</p><b>Ocultamos tus datos</b></article>'
+        '<article class="sa-protect-card"><span class="sa-protect-icon">'
+        f'{icon("visibility_off")}</span><h3>Sin historial</h3><p>No guardamos el mensaje que revisas.</p><b>No guardamos tu mensaje</b></article></div></div></section>'
+    )
+
+
+def landing_footer(*, is_home: bool = False) -> str:
+    logo = _asset_b64("logo-white.png")
+    links = {a: _home_anchor(a, is_home) for a in ("top", "como-funciona", "ejemplo-analisis")}
+    sbs, mininter = guidance.SOURCES["sbs_informalidad"], guidance.SOURCES["mininter_gota"]
+    home_href = "#top" if is_home else "/"
+    native_class = "" if is_home else " sa-footer-logo-link--native"
+    native_attrs = "" if is_home else ' tabindex="-1" aria-hidden="true"'
+    return (
+        '<footer class="sa-footer"><div class="sa-footer__content"><div class="sa-footer-grid"><div>'
+        f'<a class="sa-footer-logo-link{native_class}" href="{home_href}" aria-label="SipánAlert IA, ir al inicio"{native_attrs}><img class="sa-footer-logo" src="data:image/png;base64,{logo}" alt="SipánAlert IA"></a>'
+        '<p>Plataforma de análisis preventivo de posibles señales de riesgo en ofertas de préstamos.</p></div>'
+        f'<div><h3>Plataforma</h3><a href="{links["top"]}">Inicio</a><a href="{links["como-funciona"]}">Cómo funciona</a>'
+        f'<a href="{links["ejemplo-analisis"]}">Ejemplo de análisis</a></div>'
+        '<div><h3>Recursos</h3><a href="/orientacion">Orientación preventiva</a>'
+        f'<a href="{escape(sbs.url)}" target="_blank" rel="noopener">SBS</a>'
+        f'<a href="{escape(mininter.url)}" target="_blank" rel="noopener">Ministerio del Interior</a></div>'
+        '</div><div class="sa-footer-copy">© 2026 SipánAlert IA. Todos los derechos reservados.</div></div></footer>'
+    )
+
+
+def render_footer(home_path: str, *, is_home: bool = False) -> None:
+    with st.container(key="sa-footer-shell"):
+        st.html(landing_footer(is_home=is_home))
+        if not is_home:
+            with st.container(key="sa-footer-logo-click"):
+                st.button("SipánAlert IA, ir al inicio", key="sa-footer-home-button", on_click=st.switch_page, args=[home_path])
 
 
 def page_header(title: str, subtitle: str = "") -> None:

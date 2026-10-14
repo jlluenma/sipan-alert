@@ -13,7 +13,11 @@ import streamlit as st  # noqa: E402
 import theme  # noqa: E402
 from ui_common import PAGES  # noqa: E402
 
-st.set_page_config(page_title="SipánAlert IA", page_icon="🛡️", layout="centered")
+st.set_page_config(
+    page_title="SipánAlert IA",
+    page_icon=str(ROOT / "app" / "assets" / "logo-icon.png"),
+    layout="wide",
+)
 theme.inject_css()
 
 navigation = st.navigation(
@@ -23,7 +27,7 @@ navigation = st.navigation(
         st.Page(PAGES["resultado"], title="Resultado", visibility="hidden"),
         st.Page(PAGES["orientacion"], title="Qué hacer", icon=":material/support:"),
     ],
-    position="top",
+    position="hidden",
 )
-st.html(theme.brand())
+theme.navbar(PAGES["inicio"], PAGES["orientacion"], is_home=navigation.url_path == "")
 navigation.run()
