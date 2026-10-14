@@ -33,7 +33,7 @@ Requisitos: **Python 3.12** (también sirve 3.11+) y **Git**.
 ```powershell
 # 1. Clonar
 cd C:\proyectos
-git clone <URL-del-repositorio> sipan-alert
+git clone https://github.com/jlluenma/sipan-alert.git
 cd sipan-alert
 
 # 2. Crear y activar el entorno virtual
