@@ -69,6 +69,22 @@ def test_identifiers_are_hidden_from_evidence(model):
     assert "987654321" not in phrases and "[TELEFONO]" in phrases
 
 
+def test_highlights_point_to_trigger_phrases(model):
+    text = "Te presto S/ 1.000. Deposita S/ 30 de trámite. Responde en 10 minutos o pierdes la oferta."
+    result = analyze(text, model=model)
+    marked = {h.label: result.analyzed_text[h.start:h.end] for h in result.highlights}
+    assert marked["pago_anticipado"] == "Deposita S/ 30 de trámite"
+    assert marked["amenaza_presion"] == "Responde en 10 minutos"
+    ends = [(h.start, h.end) for h in result.highlights]
+    assert all(a_end <= b_start for (_, a_end), (b_start, _) in zip(ends, ends[1:]))
+
+
+def test_implicit_opaque_conditions_are_not_highlighted(model):
+    result = analyze("Te prestamos S/ 800 sin aval. Escríbenos.", model=model)
+    assert "condiciones_opacas" in {s.label for s in result.signals}
+    assert all(h.label != "condiciones_opacas" for h in result.highlights)
+
+
 @pytest.mark.parametrize("text", [
     "préstamo préstamo préstamo préstamo préstamo préstamo",
     "t3 prest@mos s/500 ¡¡al toq!! 🔥🔥 deposita ya q no ay tiempo",

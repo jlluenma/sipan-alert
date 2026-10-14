@@ -15,4 +15,16 @@ level = "warning"
 
 [theme]
 base = "light"
-primaryColor = "#0B5CAD"
+font = "Google Sans:https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap"
+headingFont = "Google Sans"
+headingFontWeights = [700, 700, 700, 600, 600, 600]
+baseFontSize = 16
+primaryColor = "#0B7A75"
+backgroundColor = "#F5F7F8"
+secondaryBackgroundColor = "#E4EBEE"
+textColor = "#13293D"
+linkColor = "#0B7A75"
+borderColor = "#D3DBE1"
+showWidgetBorder = true
+baseRadius = "0.75rem"
+buttonRadius = "full"

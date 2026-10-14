@@ -32,6 +32,13 @@ class Signal:
 
 
 @dataclass(frozen=True)
+class Highlight:
+    start: int
+    end: int
+    label: str
+
+
+@dataclass(frozen=True)
 class AnalysisResult:
     signals: tuple[Signal, ...]
     possible_signals: tuple[Signal, ...]
@@ -39,6 +46,9 @@ class AnalysisResult:
     model_version: str | None
     identifiers_hidden: dict[str, int] = field(default_factory=dict)
     notices: tuple[str, ...] = ()
+    # Texto ya anonimizado (solo en memoria) y fragmentos que activaron reglas.
+    analyzed_text: str = ""
+    highlights: tuple[Highlight, ...] = ()
 
     @property
     def has_signals(self) -> bool:
@@ -74,6 +84,17 @@ def _build_signal(label: str, probability: float | None, matches: list[rules.Rul
     )
 
 
+def _highlights(matches: list[rules.RuleMatch]) -> tuple[Highlight, ...]:
+    """Fragmentos a resaltar, en orden y sin solaparse (gana el primero)."""
+    spans = sorted((m.span[0], m.span[1], m.label) for m in matches if m.span)
+    result: list[Highlight] = []
+    for start, end, label in spans:
+        if result and start < result[-1].end:
+            continue
+        result.append(Highlight(start, end, label))
+    return tuple(result)
+
+
 _model_cache: dict[str, SignalModel | ModelUnavailable] = {}
 
 
@@ -96,8 +117,9 @@ def analyze(text: str | None, model: SignalModel | None = None,
     if model is None and use_default_model:
         model = get_default_model()
 
+    all_matches = rules.match_rules(anon.text)
     matches_by_label: dict[str, list[rules.RuleMatch]] = {label: [] for label in config.LABELS}
-    for match in rules.match_rules(anon.text):
+    for match in all_matches:
         matches_by_label[match.label].append(match)
 
     probabilities = model.predict_proba(anon.text) if model else {}
@@ -136,4 +158,6 @@ def analyze(text: str | None, model: SignalModel | None = None,
         model_version=model.version if model else None,
         identifiers_hidden=dict(anon.replaced),
         notices=tuple(notices),
+        analyzed_text=anon.text,
+        highlights=_highlights(all_matches),
     )

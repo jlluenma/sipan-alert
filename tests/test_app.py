@@ -10,6 +10,11 @@ from sipan import config, guidance
 APP = str(Path(__file__).resolve().parent.parent / "app" / "streamlit_app.py")
 
 
+@pytest.fixture(autouse=True)
+def _app_on_path(monkeypatch):
+    monkeypatch.syspath_prepend(str(Path(APP).parent))
+
+
 @pytest.fixture
 def app(model, monkeypatch):
     # La app usa el modelo del fixture (entrenado en temporal), no models/.
@@ -20,64 +25,82 @@ def app(model, monkeypatch):
     return AppTest.from_file(APP, default_timeout=60).run()
 
 
-@pytest.fixture(autouse=True)
-def _app_on_path(monkeypatch):
-    monkeypatch.syspath_prepend(str(Path(APP).parent))
-
-
-def _texts(at):
-    return " ".join(str(e.value) for e in [*at.markdown, *at.info, *at.caption, *at.error, *at.title])
+def _html(at) -> str:
+    return " ".join(e.proto.body for e in at.get("html"))
 
 
 def _analyze(at, text):
     at.switch_page("views/analizar.py").run()
     at.text_area(key="offer_text").input(text).run()
-    next(b for b in at.button if b.label == "Analizar").click().run()
+    next(b for b in at.button if b.label == "Revisar mensaje").click().run()
     return at
 
 
-def test_home_page(app):
+def test_home_explains_with_highlighted_demo(app):
     assert not app.exception
-    assert app.title[0].value == "🛡️ SipánAlert IA"
-    assert "No acusa a nadie de fraude" in _texts(app)
+    html = _html(app)
+    assert "Revísalo antes de pagar" in html
+    # La demo usa el analizador real: resalta y etiqueta las 3 señales.
+    assert html.count('class="sa-mark"') == 3
+    for label in ("pago_anticipado", "acceso_invasivo", "amenaza_presion"):
+        assert guidance.LABEL_INFO[label].short in html
+    assert guidance.LIMITS_SHORT in html
+    assert [b.label for b in app.button] == ["Revisar un mensaje"]
 
 
-def test_analyze_flow_shows_signal_and_limits(app):
+def test_analyze_flow_shows_verdict_highlights_and_limits(app):
     at = _analyze(app, "Deposita S/ 30 para liberar tu préstamo de S/ 500.")
     assert not at.exception
-    assert at.title[0].value == "Resultado del análisis"
-    texts = _texts(at)
-    assert guidance.LABEL_INFO["pago_anticipado"].title in texts
-    assert guidance.LIMITS_NOTICE in texts
+    html = _html(at)
+    assert "Encontramos" in html and "señal" in html
+    assert '<mark class="sa-mark"' in html
+    assert guidance.LABEL_INFO["pago_anticipado"].short in html
+    assert "Qué hacer:</strong> No deposites" in html
+    assert guidance.LIMITS_SHORT in html
+
+
+def test_offer_without_signals_shows_clear_verdict(app):
+    at = _analyze(app, "Oferta de S/ 2.000; tasas, cargos y calendario disponibles en contrato.")
+    html = _html(at)
+    assert "No encontramos señales de alerta" in html
+    assert "no garantiza que la oferta sea segura" in html
 
 
 def test_empty_input_shows_error(app):
     at = app.switch_page("views/analizar.py").run()
-    next(b for b in at.button if b.label == "Analizar").click().run()
-    assert at.title[0].value == "Analizar mensaje"
+    next(b for b in at.button if b.label == "Revisar mensaje").click().run()
+    assert "Pega el mensaje" in _html(at)
     assert "Pega el texto" in at.error[0].value
 
 
-def test_example_button_fills_text(app):
+def test_example_pill_fills_text(app):
     at = app.switch_page("views/analizar.py").run()
-    next(b for b in at.button if b.label == "Usar este ejemplo").click().run()
-    assert at.text_area(key="offer_text").value
+    at.get("button_group")[0].set_value("Pago anticipado").run()
+    assert at.text_area(key="offer_text").value.startswith("Deposita S/ 30")
 
 
 def test_result_without_analysis(app):
     at = app.switch_page("views/resultado.py").run()
-    assert "Todavía no has analizado" in _texts(at)
+    assert "Aún no hay resultado" in _html(at)
+    assert [b.label for b in at.button] == ["Revisar un mensaje"]
 
 
 def test_guidance_page_lists_official_sources_and_contacts(app):
     at = _analyze(app, "Si no pagas hoy, tus familiares sabrán de tu deuda.")
     at.switch_page("views/orientacion.py").run()
-    texts = _texts(at)
+    html = _html(at)
     assert not at.exception
-    assert guidance.LABEL_INFO["amenaza_presion"].title in texts
+    assert guidance.LABEL_INFO["amenaza_presion"].short in html
     for source in guidance.SOURCES.values():
-        assert source.url in texts
-    assert "1818" in texts and "0-800-10840" in texts
+        assert source.url in html
+    assert 'href="tel:1818"' in html and 'href="tel:080010840"' in html
+    assert 'href="mailto:informalidad@sbs.gob.pe"' in html
+
+
+def test_guidance_without_result_shows_general_tips(app):
+    at = app.switch_page("views/orientacion.py").run()
+    html = _html(at)
+    assert guidance.GENERAL_RECOMMENDATIONS[0] in html
 
 
 def test_no_personal_data_fields(app):
@@ -104,11 +127,11 @@ def test_model_unavailable_warning(monkeypatch):
     ui_common.get_model.clear()
 
 
-def test_user_markdown_is_escaped(app):
-    at = _analyze(app, "**Deposita** S/ 30 ![x](http://a.b/c.png) para liberar tu préstamo")
-    quotes = [m.value for m in at.markdown if m.value.startswith(">")]
-    # La oración se corta en "!", así que la evidencia empieza en "[x](...".
-    assert quotes and all("\\[x\\]\\(" in q for q in quotes)
+def test_user_html_is_escaped(app):
+    at = _analyze(app, "<img src=x onerror=alert(1)> <b>Deposita</b> S/ 30 para liberar tu préstamo")
+    html = _html(at)
+    assert "<img src=x" not in html and "<b>Deposita" not in html
+    assert "&lt;img src=x onerror=alert(1)&gt;" in html
 
 
 def test_text_area_limit_matches_config(app):

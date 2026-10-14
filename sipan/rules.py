@@ -53,6 +53,9 @@ class RuleMatch:
     label: str
     description: str
     phrase: str
+    # Posición exacta del fragmento que activó la regla (para resaltarlo).
+    # None cuando la regla no señala un fragmento concreto (CO2: ausencia de datos).
+    span: tuple[int, int] | None = None
 
 
 _PAY_VERB = r"(deposit\w*|yape\w*|plin\w*|transfier\w*|transfer\w*|abon\w*|envi\w*|pag\w*|adelant\w*|cancel\w*)"
@@ -106,7 +109,7 @@ RULES: tuple[Rule, ...] = (
          _flex(r"\b(moroso|estafador|ladron)\b")),
     Rule("AP5", "amenaza_presion", "Crea urgencia artificial para decidir sin revisar.",
          _flex(r"\b(solo por hoy|ultima oportunidad|cupos? limitados?|de inmediato|sin pensarlo|pierdes? la oferta|perderas)\b"
-               r"|\b(vence|expira) en \d+ (minutos|horas?)\b|\ben \d+ minutos\b|\b(acepta|decide|confirma)\w* (ya|ahora|rapido)\b")),
+               r"|\b(vence|expira|responde|contesta|confirma|decide|paga)\w* en \d+ (minutos|horas?)\b|\ben \d+ minutos\b|\b(acepta|decide|confirma)\w* (ya|ahora|rapido)\b")),
     Rule("AP6", "amenaza_presion", "Pide que no consultes con nadie o que no revises el contrato.",
          _flex(r"\bno (le )?(cuentes|consultes|digas)\b|\bno hay tiempo para revisar\b"),
          check_negation=False),
@@ -151,7 +154,8 @@ def match_rules(text: str) -> list[RuleMatch]:
             if rule.check_negation and _is_negated(text, m.start()):
                 continue
             matches.append(RuleMatch(rule.id, rule.label, rule.description,
-                                     _sentence_around(text, m.start(), m.end())))
+                                     _sentence_around(text, m.start(), m.end()),
+                                     span=(m.start(), m.end())))
             break
 
     offer = _OFFER.search(text)

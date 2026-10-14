@@ -1,5 +1,6 @@
 import streamlit as st
 
+import theme
 from sipan import config
 from sipan.analyzer import analyze
 from sipan.preprocessing import InputError
@@ -9,43 +10,40 @@ st.session_state.setdefault(TEXT_KEY, "")
 
 
 def _use_example() -> None:
-    st.session_state[TEXT_KEY] = EXAMPLES[st.session_state["example_choice"]]
+    choice = st.session_state.get("example_choice")
+    if choice:
+        st.session_state[TEXT_KEY] = EXAMPLES[choice]
 
 
-st.title("Analizar mensaje")
-st.write("Copia y pega el texto de la oferta de préstamo que recibiste.")
-
-st.info(
-    "🔒 No necesitas crear una cuenta ni dar tu DNI o contactos. "
-    "El texto se analiza en el momento y **no se guarda**. "
-    "Teléfonos, DNI, correos, enlaces y cuentas se ocultan antes del análisis.",
-)
+theme.page_header("Pega el mensaje", "Cópialo tal cual desde WhatsApp, SMS o Facebook.")
 
 model = get_model()
 if model is None:
-    st.warning(
-        "El modelo de Machine Learning no está disponible. "
-        "El análisis usará solo reglas documentadas."
-    )
-
-with st.expander("¿No tienes un mensaje a la mano? Usa un ejemplo ficticio"):
-    st.selectbox("Ejemplo", list(EXAMPLES), key="example_choice")
-    st.button("Usar este ejemplo", on_click=_use_example)
+    st.warning("El modelo de IA no está disponible. Revisaremos el mensaje solo con reglas.")
 
 st.text_area(
-    "Texto de la oferta",
+    "Mensaje de la oferta",
     key=TEXT_KEY,
-    height=200,
+    height=180,
     max_chars=config.MAX_TEXT_LENGTH,
-    placeholder="Ej.: «Te prestamos S/ 1.000 al toque, solo deposita S/ 30 de trámite…»",
+    placeholder="Ej.: Te prestamos S/ 1.000 al toque, solo deposita S/ 30 de trámite…",
+    label_visibility="collapsed",
 )
 
-if st.button("Analizar", type="primary", icon=":material/search:"):
+st.pills("¿No tienes uno a la mano? Prueba un ejemplo:", list(EXAMPLES),
+         key="example_choice", on_change=_use_example)
+
+st.html(
+    f'<p class="sa-privacy">{theme.icon("lock")}'
+    "<span>No guardamos tu mensaje. Antes de revisarlo ocultamos teléfonos, DNI, correos y cuentas.</span></p>"
+)
+
+if st.button("Revisar mensaje", type="primary", icon=":material/search:"):
     try:
         st.session_state[RESULT_KEY] = analyze(
             st.session_state[TEXT_KEY], model=model, use_default_model=False
         )
     except InputError as exc:
-        st.error(str(exc))
+        st.error(str(exc), icon=":material/edit_note:")
     else:
         st.switch_page(PAGES["resultado"])

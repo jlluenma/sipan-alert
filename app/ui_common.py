@@ -6,8 +6,6 @@ del servidor, por pestaña) y se descartan al cerrar la sesión. Nada se escribe
 
 from __future__ import annotations
 
-import re
-
 import streamlit as st
 
 from sipan.analyzer import AnalysisResult
@@ -31,14 +29,6 @@ EXAMPLES = {
     "Cuotas sin más detalle": "Recibes S/ 900 y pagas 20 cuotas de S/ 60.",
     "Oferta con condiciones": "Oferta de S/ 2.000; tasas, cargos y calendario disponibles en contrato.",
 }
-
-
-_MARKDOWN_SPECIAL = re.compile(r"([\\`*_{}\[\]()#+\-.!|<>~$])")
-
-
-def escape_markdown(text: str) -> str:
-    """Muestra texto del usuario literalmente (sin enlaces, imágenes ni formato)."""
-    return _MARKDOWN_SPECIAL.sub(r"\\\1", text)
 
 
 @st.cache_resource(show_spinner=False)

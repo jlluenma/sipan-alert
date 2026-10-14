@@ -26,6 +26,8 @@ class Contact:
 
 @dataclass(frozen=True)
 class LabelInfo:
+    short: str  # nombre de 2-3 palabras para etiquetas y resaltados
+    icon: str  # nombre de Material Symbols
     title: str
     explanation: str
     recommendations: tuple[str, ...]
@@ -67,6 +69,8 @@ CONTACTS = (
 
 LABEL_INFO: dict[str, LabelInfo] = {
     "pago_anticipado": LabelInfo(
+        short="Pago por adelantado",
+        icon="payments",
         title="Pide un pago antes de entregarte el préstamo",
         explanation=(
             "El mensaje solicita dinero (comisión, seguro, garantía o trámite) antes del desembolso. "
@@ -79,6 +83,8 @@ LABEL_INFO: dict[str, LabelInfo] = {
         ),
     ),
     "acceso_invasivo": LabelInfo(
+        short="Pide tus datos",
+        icon="contacts",
         title="Pide acceso a tus datos personales",
         explanation=(
             "El mensaje pide acceso a contactos, fotos, mensajes, claves u otros datos que no son "
@@ -92,6 +98,8 @@ LABEL_INFO: dict[str, LabelInfo] = {
         ),
     ),
     "amenaza_presion": LabelInfo(
+        short="Amenaza o presión",
+        icon="campaign",
         title="Contiene amenazas o presión para decidir rápido",
         explanation=(
             "El mensaje usa amenazas (avisar a tu familia, publicar fotos, ir a tu casa) o presión "
@@ -105,6 +113,8 @@ LABEL_INFO: dict[str, LabelInfo] = {
         ),
     ),
     "condiciones_opacas": LabelInfo(
+        short="Condiciones ocultas",
+        icon="visibility_off",
         title="No muestra las condiciones económicas",
         explanation=(
             "El mensaje ofrece dinero sin indicar cuotas, tasa (TCEA), plazo o costo total, o pospone "
@@ -129,6 +139,7 @@ LIMITS_NOTICE = (
     "Este resultado es orientativo. SipánAlert IA identifica señales en el texto que pegaste; "
     "no determina si una empresa o persona comete fraude ni certifica que un prestamista sea legítimo."
 )
+LIMITS_SHORT = "Es una orientación, no una acusación: no certifica si un prestamista es legítimo."
 NO_SIGNALS_NOTICE = (
     "No se observaron las señales definidas en este texto. Esto no garantiza que la oferta sea segura: "
     "el análisis solo cubre lo que dice el mensaje."

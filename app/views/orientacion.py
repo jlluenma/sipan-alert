@@ -1,38 +1,30 @@
 import streamlit as st
 
+import theme
 from sipan import guidance
 from ui_common import PAGES, get_result
 
-st.title("Orientación preventiva")
-
 result = get_result()
+
+theme.page_header("Qué hacer ahora")
+
 if result is not None and result.has_signals:
-    st.markdown("### Para las señales observadas en tu mensaje")
-    for signal in result.signals:
-        with st.container(border=True):
-            st.markdown(f"**{signal.title}**")
-            for tip in signal.recommendations:
-                st.markdown(f"- {tip}")
-elif result is not None:
-    st.info(guidance.NO_SIGNALS_NOTICE)
+    theme.section_title("Para tu mensaje")
+    st.html(theme.tips_by_signal(result.signals))
+else:
+    theme.section_title("Antes de aceptar un préstamo")
+    st.html(theme.checklist(guidance.GENERAL_RECOMMENDATIONS))
 
-st.markdown("### Antes de aceptar cualquier préstamo")
-for tip in guidance.GENERAL_RECOMMENDATIONS:
-    st.markdown(f"- {tip}")
+theme.section_title("¿Necesitas ayuda? Llama o escribe")
+st.html(theme.contact_cards())
 
-st.markdown("### Fuentes oficiales")
-for source in guidance.SOURCES.values():
-    st.markdown(f"- [{source.name}]({source.url}) — {source.description}")
-
-st.markdown("### ¿A quién acudir?")
-for contact in guidance.CONTACTS:
-    st.markdown(f"- **{contact.name}: {contact.value}** — {contact.use}")
-
-st.divider()
-st.caption(guidance.LIMITS_NOTICE)
+theme.section_title("Fuentes oficiales")
+st.html(theme.source_links())
 
 if result is None:
-    if st.button("Analizar un mensaje", type="primary"):
+    if st.button("Revisar un mensaje", type="primary", icon=":material/search:"):
         st.switch_page(PAGES["analizar"])
 elif st.button("Volver al resultado", icon=":material/arrow_back:"):
     st.switch_page(PAGES["resultado"])
+
+st.html(f'<p class="sa-fine">{guidance.LIMITS_NOTICE}</p>')

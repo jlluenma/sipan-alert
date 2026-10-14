@@ -10,10 +10,10 @@ Proyecto del curso Innovación y Transformación Digital, UTP Chiclayo, 2026. **
 
 | Historia | Implementación |
 |---|---|
-| US-01: Pegar una oferta | Vista **Analizar mensaje**: valida texto vacío, longitud (10 a 3000 caracteres) y texto sin palabras. |
+| US-01: Pegar una oferta | Vista **Revisar mensaje**: valida texto vacío, longitud (10 a 3000 caracteres) y texto sin palabras. Ejemplos ficticios en un clic. |
 | US-02: Identificar señales | Clasificador multietiqueta TF-IDF + regresión logística (One-vs-Rest) junto con reglas documentadas. Si el modelo no está disponible, avisa y usa solo reglas. |
-| US-03: Entender por qué | Vista **Resultado**: muestra la señal, el origen (modelo o regla), el nivel de confianza, la frase del texto que la activó, los términos influyentes y los límites del análisis. |
-| US-04: Orientación | Vista **Orientación**: recomendaciones por señal, fuentes oficiales y teléfonos (SBS 0-800-10840, MININTER 1818, PNP 105). |
+| US-03: Entender por qué | Vista **Resultado**: el mensaje del usuario con las frases de riesgo **resaltadas y etiquetadas**, un veredicto en una línea y una tarjeta por señal con «Qué hacer» y «¿Por qué lo marcamos?» (origen, confianza y términos influyentes). |
+| US-04: Orientación | Vista **Qué hacer**: dos acciones por señal detectada, contactos con un toque para llamar o escribir (SBS 0-800-10840, MININTER 1818, PNP 105) y fuentes oficiales. |
 | US-05: Privacidad | Sin cuenta ni campos de DNI o contactos. El texto no se guarda ni se registra en logs. Teléfonos, DNI, correos, enlaces y cuentas se ocultan antes de analizar. Streamlit sin telemetría. |
 
 **Señales (Anexo A, APF1):** `pago_anticipado`, `acceso_invasivo`, `amenaza_presion` y `condiciones_opacas`. Los criterios de cada una están en [`data/LABELING_GUIDE.md`](data/LABELING_GUIDE.md).
@@ -57,7 +57,7 @@ En Linux o macOS: `python3 -m venv .venv` y `source .venv/bin/activate`.
 ### Otros comandos
 
 ```bash
-pytest                                 # 91 pruebas automáticas
+pytest                                 # 95 pruebas automáticas
 python scripts/generate_synthetic.py   # regenera data/dataset_v1.csv (determinista, semilla 42)
 ```
 
@@ -86,7 +86,8 @@ sipan/                     Núcleo (no depende de Streamlit)
   analyzer.py              analyze(texto) -> AnalysisResult (ML + reglas + avisos)
   guidance.py              Textos de orientación, fuentes oficiales y contactos
 app/
-  streamlit_app.py         Entrada y navegación
+  streamlit_app.py         Entrada y navegación superior
+  theme.py                 Sistema visual: tokens, CSS y componentes HTML (burbuja con resaltados, tarjetas)
   ui_common.py             Sesión, modelo cacheado y ejemplos
   views/                   inicio · analizar · resultado · orientacion
 data/
@@ -98,6 +99,13 @@ scripts/
 reports/                   Métricas versionadas (evidencia del sprint)
 tests/                     pytest: entrada, anonimización, reglas, dataset, modelo, analizador, privacidad y UI
 ```
+
+## Diseño
+
+- **Idea central:** mostrar el sistema en vez de explicarlo. La portada presenta un mensaje ficticio con las frases de riesgo resaltadas por el analizador real, y el resultado usa esa misma burbuja con el mensaje del usuario.
+- **Tipografía:** Google Sans (Google Fonts), configurada en `.streamlit/config.toml`. Íconos: Material Symbols Rounded.
+- **Color:** tinta `#13293D`, turquesa `#0B7A75` para las acciones, oro Sipán `#C8922A` solo en la marca, y resaltador ámbar únicamente para las señales. Nunca se usa rojo de «peligro», para no comunicar una acusación.
+- **Accesibilidad:** pensado primero para el celular (sin scroll horizontal a 390 px), foco visible, animación de resaltado solo con `prefers-reduced-motion: no-preference` y todo el texto del usuario escapado.
 
 ## Cómo funciona el análisis
 
