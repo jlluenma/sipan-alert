@@ -24,30 +24,44 @@ Proyecto del curso Innovación y Transformación Digital, UTP Chiclayo, 2026. **
 - **Modelo:** entrenado y evaluado de verdad sobre ese corpus. Sus métricas **no representan** el desempeño con mensajes reales. Ver [`reports/metrics_v1.md`](reports/metrics_v1.md).
 - **Resultado de la evaluación:** con validación por familias de redacción (GroupKFold), el ML obtiene un F1 macro de **0,68**, mientras que el baseline de reglas llega a **0,94**. Las reglas salen favorecidas porque se escribieron conociendo las mismas frases. Con este corpus el ML **no supera** al baseline; tal como prevé el APF1, la app combina ambos y muestra el origen de cada señal. Mejorar el modelo requiere un corpus revisado más diverso.
 
-## Requisitos
+## Inicio rápido (Windows)
 
-- Python 3.12 (también funciona con 3.11+)
-- Git
+Requisitos: **Python 3.12** (también sirve 3.11+) y **Git**.
 
-## Instalación
+> ⚠️ Clona el proyecto en una ruta corta, por ejemplo `C:\proyectos\sipan-alert`. Si la ruta es muy larga, `pip install` falla con `WinError 206`, porque Streamlit trae archivos con rutas profundas y Windows tiene un límite de 260 caracteres.
 
-```bash
+```powershell
+# 1. Clonar
+cd C:\proyectos
+git clone <URL-del-repositorio> sipan-alert
+cd sipan-alert
+
+# 2. Crear y activar el entorno virtual
 py -3.12 -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # Linux / macOS
+.venv\Scripts\activate
+
+# 3. Instalar dependencias (1 a 2 minutos)
 pip install -r requirements.txt
+
+# 4. Entrenar el modelo (solo la primera vez, unos 5 segundos)
+python scripts/train.py
+
+# 5. Abrir la app (se abre en http://localhost:8501)
+streamlit run app/streamlit_app.py
 ```
 
-## Uso
+Para detener la app, presiona `Ctrl + C` en la terminal. Las siguientes veces solo necesitas el paso 2 (activar) y el paso 5.
+
+En Linux o macOS: `python3 -m venv .venv` y `source .venv/bin/activate`.
+
+### Otros comandos
 
 ```bash
-python scripts/generate_synthetic.py   # (opcional) regenera data/dataset_v1.csv; es determinista (semilla 42)
-python scripts/train.py                # entrena y evalúa -> models/model_v1.joblib + reports/metrics_v1.{json,md}
-streamlit run app/streamlit_app.py     # abre la app en http://localhost:8501
 pytest                                 # 91 pruebas automáticas
+python scripts/generate_synthetic.py   # regenera data/dataset_v1.csv (determinista, semilla 42)
 ```
 
-`train.py` tiene que ejecutarse al menos una vez después de clonar el repositorio, porque el modelo no se versiona. Tarda unos 5 segundos.
+El modelo no se sube a git. Reentrenar con el mismo dataset reproduce exactamente las métricas de `reports/`.
 
 ### Ejemplos ficticios para la demo (Anexo C)
 

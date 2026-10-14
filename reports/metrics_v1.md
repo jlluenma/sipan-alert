@@ -4,7 +4,7 @@
 
 - Dataset: `data/dataset_v1.csv` (600 mensajes, fuentes: {'sintetico': 600})
 - SHA-256 del dataset: `ef00d21391bb64079f323339cc86aa0d43ec5998bd439fc129e5734040eccc3b`
-- Entrenado: 2026-10-14T07:56:52+00:00 · scikit-learn 1.9.1
+- scikit-learn 1.9.1
 - Evaluación: GroupKFold(5) por grupo_similitud; predicciones fuera de fold
 
 ## Métricas por etiqueta

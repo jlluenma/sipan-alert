@@ -140,7 +140,7 @@ def write_markdown_report(metrics: dict, path: Path) -> None:
         f"- Dataset: `{metrics['dataset']['path']}` ({metrics['dataset']['n_samples']} mensajes, "
         f"fuentes: {metrics['dataset']['sources']})",
         f"- SHA-256 del dataset: `{metrics['dataset']['sha256']}`",
-        f"- Entrenado: {metrics['trained_at']} · scikit-learn {metrics['sklearn_version']}",
+        f"- scikit-learn {metrics['sklearn_version']}",
         f"- Evaluación: {metrics['evaluation']}",
         "",
         "## Métricas por etiqueta",
@@ -204,9 +204,10 @@ def main() -> None:
         dataset_label = args.dataset.resolve().relative_to(config.ROOT).as_posix()
     except ValueError:
         dataset_label = args.dataset.name
+    # Sin fecha de entrenamiento: el reporte versionado es determinista y solo
+    # cambia si cambian datos o código (la fecha queda dentro del modelo).
     metrics = {
         "model_version": config.DATASET_VERSION,
-        "trained_at": trained_at,
         "sklearn_version": sklearn.__version__,
         "note": SYNTHETIC_NOTE,
         "dataset": {
