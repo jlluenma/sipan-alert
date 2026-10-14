@@ -26,7 +26,7 @@ Python 3.12 · pandas · numpy · scikit-learn · joblib · Streamlit 1.65 · py
 ## Convenciones
 - Etiquetas (Anexo A): `pago_anticipado`, `acceso_invasivo`, `amenaza_presion`, `condiciones_opacas`.
 - Las reglas se escriben sin tildes; `_flex()` las vuelve insensibles a tildes. La negación se busca en los 40 caracteres previos, dentro de la misma oración.
-- El texto del usuario se muestra con `escape_markdown()`.
+- El texto del usuario se muestra solo a través de `app/theme.py`, que lo escapa con `html.escape`.
 - Para agregar frases al corpus, cada pool de `generate_synthetic.py` debe tener un número de frases múltiplo de 5.
 
 ## Reglas no negociables
