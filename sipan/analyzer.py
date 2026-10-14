@@ -144,10 +144,7 @@ def analyze(text: str | None, model: SignalModel | None = None,
     if not signals:
         notices.append(guidance.NO_SIGNALS_NOTICE)
     if model is None:
-        notices.append(
-            "El modelo de Machine Learning no está disponible en este momento; "
-            "el resultado se basa solo en reglas documentadas."
-        )
+        notices.append(guidance.MODEL_UNAVAILABLE_NOTICE)
     else:
         notices.append(guidance.SYNTHETIC_MODEL_NOTICE)
 

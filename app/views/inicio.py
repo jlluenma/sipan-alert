@@ -1,12 +1,12 @@
 import streamlit as st
 
 import theme
-from sipan import config, guidance
+from sipan import config
 from sipan.analyzer import analyze
 from sipan.preprocessing import InputError
 from ui_common import EXAMPLES, PAGES, RESULT_KEY, TEXT_KEY, get_model
 
-# Mensaje ficticio; los resaltados del ejemplo los produce el analizador de reglas.
+# Mensaje ficticio; los resaltados y las señales del ejemplo los produce el analizador de reglas.
 DEMO = ("Tu crédito fue aprobado sin evaluación. Para recibirlo hoy debes depositar S/ 120 "
         "por gastos de activación. Solo por hoy.")
 demo = analyze(DEMO, use_default_model=False)
@@ -48,10 +48,7 @@ with st.container(key="sa-hero-wrap"):
             f'<p class="sa-privacy">{theme.icon("lock")} No incluyas datos personales.</p>'
         )
 
-example_markup = (
-    theme.chat_bubble(demo.analyzed_text, demo.highlights, sender="Mensaje ficticio")
-)
-st.html(theme.landing_sections(example_markup))
+st.html(theme.landing_sections(demo))
 
 with st.container(key="sa-cta-footer"):
     with st.container(key="sa-cta"):

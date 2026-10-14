@@ -40,12 +40,26 @@ def test_home_explains_with_highlighted_demo(app):
     assert not app.exception
     html = _html(app)
     assert "Revísalo antes de pagar" in html
-    # La demo usa el analizador real: resalta y etiqueta las 3 señales.
-    assert html.count('class="sa-mark"') == 3
-    for label in ("pago_anticipado", "acceso_invasivo", "amenaza_presion"):
+    # La demo usa el analizador real: resalta 2 frases y lista sus 3 señales (CO2 no resalta).
+    assert html.count('class="sa-mark"') == 2
+    for label in ("pago_anticipado", "amenaza_presion", "condiciones_opacas"):
         assert guidance.LABEL_INFO[label].short in html
     assert guidance.LIMITS_SHORT in html
-    assert [b.label for b in app.button] == ["Revisar un mensaje"]
+    assert [b.label for b in app.button] == ["Analizar oferta"]
+
+
+def test_home_form_analyzes_directly(app):
+    app.text_area(key="offer_text").input("Deposita S/ 30 para liberar tu préstamo de S/ 500.").run()
+    next(b for b in app.button if b.label == "Analizar oferta").click().run()
+    assert not app.exception
+    assert guidance.LABEL_INFO["pago_anticipado"].short in _html(app)
+
+
+def test_footer_links_point_to_official_sources(app):
+    html = _html(app)
+    assert guidance.SOURCES["sbs_informalidad"].url in html
+    assert guidance.SOURCES["mininter_gota"].url in html
+    assert 'href="/orientacion"' in html
 
 
 def test_analyze_flow_shows_verdict_highlights_and_limits(app):
@@ -57,6 +71,16 @@ def test_analyze_flow_shows_verdict_highlights_and_limits(app):
     assert guidance.LABEL_INFO["pago_anticipado"].short in html
     assert "Qué hacer:</strong> No deposites" in html
     assert guidance.LIMITS_SHORT in html
+
+
+def test_result_shows_when_model_is_unavailable(monkeypatch):
+    import ui_common
+
+    ui_common.get_model.clear()
+    monkeypatch.setattr(ui_common, "load_model", lambda: None)
+    at = _analyze(AppTest.from_file(APP, default_timeout=60).run(), "Deposita S/ 30 para liberar tu préstamo.")
+    assert guidance.MODEL_UNAVAILABLE_NOTICE in _html(at)
+    ui_common.get_model.clear()
 
 
 def test_offer_without_signals_shows_clear_verdict(app):
@@ -81,8 +105,11 @@ def test_example_pill_fills_text(app):
 
 def test_result_without_analysis(app):
     at = app.switch_page("views/resultado.py").run()
-    assert "Aún no hay resultado" in _html(at)
-    assert [b.label for b in at.button] == ["Revisar un mensaje"]
+    html = _html(at)
+    assert "Aún no hay resultado" in html
+    assert "Revisar un mensaje" in [b.label for b in at.button]
+    # Fuera de Inicio, las anclas de secciones vuelven a Inicio.
+    assert 'href="/#como-funciona"' in html
 
 
 def test_guidance_page_lists_official_sources_and_contacts(app):

@@ -51,13 +51,7 @@ with st.container(key="sa-page-content"):
             clear_analysis()
             st.switch_page(PAGES["analizar"])
 
-    hidden_notices = {guidance.LIMITS_NOTICE, guidance.NO_SIGNALS_NOTICE}
-    extra = [
-        notice for notice in result.notices
-        if notice not in hidden_notices
-        and not notice.startswith("El modelo de Machine Learning no está disponible en este momento")
-    ]
-    if extra:
-        st.html(f'<p class="sa-fine">{" ".join(extra)}</p>')
+    extra = [n for n in result.notices if n not in (guidance.LIMITS_NOTICE, guidance.NO_SIGNALS_NOTICE)]
+    st.html(f'<p class="sa-fine">{" ".join([guidance.LIMITS_SHORT, *extra])}</p>')
 
 theme.render_footer(PAGES["inicio"])

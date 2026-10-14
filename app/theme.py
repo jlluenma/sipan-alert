@@ -6,6 +6,7 @@ Todo texto dinámico (en especial el mensaje del usuario) pasa por `html.escape`
 from __future__ import annotations
 
 import base64
+from functools import lru_cache
 from html import escape
 from pathlib import Path
 
@@ -159,8 +160,8 @@ CSS = """
 .st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] { width: auto !important; max-width: none !important; flex: 0 0 auto !important; }
 .st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child { width: 195px !important; max-width: 195px !important; flex: 0 0 195px !important; }
 .st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2) { margin-left: auto; }
-.st-key-sa-navbar [data-testid="stPageLink"] a, .st-key-sa-navbar .stMarkdown a { color: #222B39 !important; background: transparent !important; border-radius: 4px; padding: .35rem .2rem; font-size: .88rem; text-decoration: none !important; }
-.st-key-sa-navbar [data-testid="stPageLink"] a:hover, .st-key-sa-navbar .stMarkdown a:hover { color: #E52428 !important; text-decoration: underline !important; }
+.st-key-sa-navbar [data-testid="stPageLink"] a, .st-key-sa-navbar .stMarkdown a, .st-key-sa-navbar .sa-nav-link { color: #222B39 !important; background: transparent !important; border-radius: 4px; padding: .35rem .2rem; font-size: .88rem; text-decoration: none !important; }
+.st-key-sa-navbar [data-testid="stPageLink"] a:hover, .st-key-sa-navbar .stMarkdown a:hover, .st-key-sa-navbar .sa-nav-link:hover { color: #E52428 !important; text-decoration: underline !important; }
 .st-key-sa-navbar { position: relative; }
 .st-key-sa-navbar .st-key-sa-logo-click { position: absolute !important; top: 0; left: 64px; z-index: 20; width: 195px; height: 76px; pointer-events: auto; }
 .st-key-sa-logo-click [data-testid="stVerticalBlock"] { position: relative; width: 100%; height: 100%; min-height: 100%; gap: 0 !important; }
@@ -213,6 +214,7 @@ CSS = """
 .sa-home-section { box-sizing: border-box; width: min(100%, var(--sa-shell)); margin: 0 auto; padding: 3.25rem var(--sa-gutter); }
 .sa-home-section--soft { max-width: var(--sa-shell); background: #FFFFFF; padding: .5rem clamp(1.15rem, 4.5vw, 4.5rem) 3.25rem; }
 #ejemplo-analisis.sa-home-section { padding-bottom: 6rem; }
+.sa-example-fine { max-width: 850px; margin: 1.6rem auto 0; text-align: center; }
 .sa-section-inner { max-width: 1180px; margin: 0 auto; }
 .sa-kicker { color: #B5161A; font-size: .72rem; line-height: 1.3; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; text-align: center; margin: 0 0 .5rem; }
 .sa-home-title { color: #222B39; text-align: center; font-size: clamp(1.8rem,3.6vw,2.55rem); line-height: 1.15; letter-spacing: -.025em; margin: 0 0 .45rem; }
@@ -389,9 +391,18 @@ def icon(name: str) -> str:
     return f'<span class="sa-icon" aria-hidden="true">{escape(name)}</span>'
 
 
+@lru_cache(maxsize=None)
+def _asset_b64(name: str) -> str:
+    return base64.b64encode((Path(__file__).resolve().parent / "assets" / name).read_bytes()).decode("ascii")
+
+
+def _home_anchor(anchor: str, is_home: bool) -> str:
+    """Las secciones viven en Inicio: desde otras páginas el ancla vuelve a Inicio."""
+    return f"#{anchor}" if is_home else f"/#{anchor}"
+
+
 def brand(*, is_home: bool) -> str:
-    icon_path = Path(__file__).resolve().parent / "assets" / "logo-icon.png"
-    logo = base64.b64encode(icon_path.read_bytes()).decode("ascii")
+    logo = _asset_b64("logo-icon.png")
     href = "#top" if is_home else "/"
     native_class = "" if is_home else " sa-brand-link--native"
     native_attrs = "" if is_home else ' tabindex="-1" aria-hidden="true"'
@@ -409,7 +420,7 @@ def navbar(home_path: str, guidance_path: str, *, is_home: bool) -> None:
         with home_col:
             st.page_link(home_path, label="Inicio")
         with how_col:
-            st.markdown('[Cómo funciona](#como-funciona)', unsafe_allow_html=True)
+            st.html(f'<a class="sa-nav-link" href="{_home_anchor("como-funciona", is_home)}">Cómo funciona</a>')
         with guide_col:
             st.page_link(guidance_path, label="Qué hacer")
         if not is_home:
@@ -417,9 +428,14 @@ def navbar(home_path: str, guidance_path: str, *, is_home: bool) -> None:
                 st.button("SipánAlert IA, ir al inicio", key="sa-logo-home-button", on_click=st.switch_page, args=[home_path])
 
 
-def landing_sections(example_message: str = "") -> str:
-    illustration_path = Path(__file__).resolve().parent / "assets" / "how-it-works.png"
-    illustration = base64.b64encode(illustration_path.read_bytes()).decode("ascii")
+def landing_sections(example: AnalysisResult) -> str:
+    """Secciones de Inicio. Las señales del ejemplo salen del analizador, no se escriben a mano."""
+    illustration = _asset_b64("how-it-works.png")
+    example_signals = "".join(
+        f"<div><h3>{escape(guidance.LABEL_INFO[s.label].short)}</h3>"
+        f"<p>{escape(guidance.LABEL_INFO[s.label].title)}.</p></div>"
+        for s in example.signals
+    )
     return (
         '<section class="sa-home-section" id="como-funciona">'
         '<p class="sa-kicker">Cómo funciona</p>'
@@ -434,23 +450,24 @@ def landing_sections(example_message: str = "") -> str:
         '<h2 class="sa-home-title">¿Qué señales puede ocultar una oferta?</h2>'
         '<p class="sa-home-subtitle">Observa este ejemplo ficticio y aprende a reconocer posibles riesgos.</p>'
         '<div class="sa-example-panel"><div class="sa-example-device"><p class="sa-example-label">Oferta de préstamo · Ejemplo ficticio</p>'
-        f'{example_message}</div>'
-        '<div class="sa-example-signals"><div><h3>Pago anticipado</h3><p>Solicitan dinero antes de entregar el préstamo.</p></div>'
-        '<div><h3>Presión temporal</h3><p>Intentan que tomes una decisión inmediata.</p></div></div></div></section>'
+        + chat_bubble(example.analyzed_text, example.highlights, sender="Mensaje ficticio")
+        + f'</div><div class="sa-example-signals">{example_signals}</div></div>'
+        f'<p class="sa-fine sa-example-fine">{escape(guidance.LIMITS_SHORT)} Prototipo académico de la UTP Chiclayo.</p></section>'
         '<section class="sa-home-section sa-home-section--soft" id="privacidad"><div class="sa-section-inner">'
         '<div class="sa-protect-heading"><h2 class="sa-home-title">Tu información merece protección</h2><p class="sa-home-subtitle">Revisa ofertas de préstamo sin proporcionar datos personales.</p></div>'
         '<div class="sa-protect-grid"><article class="sa-protect-card"><span class="sa-protect-icon">'
-        f'{icon("person_off")}</span><h3>Sin Registro</h3><p>Usa el analizador sin crear cuentas.</p><b>100% Anónimo</b></article>'
+        f'{icon("person_off")}</span><h3>Sin registro</h3><p>Usa el analizador sin crear cuentas.</p><b>Sin cuenta ni DNI</b></article>'
         '<article class="sa-protect-card"><span class="sa-protect-icon">'
-        f'{icon("lock")}</span><h3>Sin Datos Sensibles</h3><p>No pedimos DNI ni claves bancarias.</p><b>Datos Protegidos</b></article>'
+        f'{icon("lock")}</span><h3>Datos ocultos</h3><p>Antes de revisar el mensaje ocultamos teléfonos, DNI, correos y cuentas.</p><b>Ocultamos tus datos</b></article>'
         '<article class="sa-protect-card"><span class="sa-protect-icon">'
-        f'{icon("visibility_off")}</span><h3>Análisis Privado</h3><p>No guardamos tu historial.</p><b>Sin Historial</b></article></div></div></section>'
+        f'{icon("visibility_off")}</span><h3>Sin historial</h3><p>No guardamos el mensaje que revisas.</p><b>No guardamos tu mensaje</b></article></div></div></section>'
     )
 
 
 def landing_footer(*, is_home: bool = False) -> str:
-    logo_path = Path(__file__).resolve().parent / "assets" / "logo-white.png"
-    logo = base64.b64encode(logo_path.read_bytes()).decode("ascii")
+    logo = _asset_b64("logo-white.png")
+    links = {a: _home_anchor(a, is_home) for a in ("top", "como-funciona", "ejemplo-analisis")}
+    sbs, mininter = guidance.SOURCES["sbs_informalidad"], guidance.SOURCES["mininter_gota"]
     home_href = "#top" if is_home else "/"
     native_class = "" if is_home else " sa-footer-logo-link--native"
     native_attrs = "" if is_home else ' tabindex="-1" aria-hidden="true"'
@@ -458,8 +475,11 @@ def landing_footer(*, is_home: bool = False) -> str:
         '<footer class="sa-footer"><div class="sa-footer__content"><div class="sa-footer-grid"><div>'
         f'<a class="sa-footer-logo-link{native_class}" href="{home_href}" aria-label="SipánAlert IA, ir al inicio"{native_attrs}><img class="sa-footer-logo" src="data:image/png;base64,{logo}" alt="SipánAlert IA"></a>'
         '<p>Plataforma de análisis preventivo de posibles señales de riesgo en ofertas de préstamos.</p></div>'
-        '<div><h3>Plataforma</h3><a href="#top">Inicio</a><a href="#como-funciona">Cómo funciona</a><a href="#ejemplo-analisis">Ejemplo de análisis</a></div>'
-        '<div><h3>Recursos</h3><a href="#que-hacer">Orientación preventiva</a><a href="https://www.sbs.gob.pe/">SBS</a><a href="https://www.gob.pe/mininter">Ministerio del Interior</a></div>'
+        f'<div><h3>Plataforma</h3><a href="{links["top"]}">Inicio</a><a href="{links["como-funciona"]}">Cómo funciona</a>'
+        f'<a href="{links["ejemplo-analisis"]}">Ejemplo de análisis</a></div>'
+        '<div><h3>Recursos</h3><a href="/orientacion">Orientación preventiva</a>'
+        f'<a href="{escape(sbs.url)}" target="_blank" rel="noopener">SBS</a>'
+        f'<a href="{escape(mininter.url)}" target="_blank" rel="noopener">Ministerio del Interior</a></div>'
         '</div><div class="sa-footer-copy">© 2026 SipánAlert IA. Todos los derechos reservados.</div></div></footer>'
     )
 
