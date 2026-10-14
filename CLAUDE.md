@@ -28,6 +28,7 @@ Python 3.12 · pandas · numpy · scikit-learn · joblib · Streamlit 1.65 · py
 - Las reglas se escriben sin tildes; `_flex()` las vuelve insensibles a tildes. La negación se busca en los 40 caracteres previos, dentro de la misma oración.
 - El texto del usuario se muestra solo a través de `app/theme.py`, que lo escapa con `html.escape`.
 - Para agregar frases al corpus, cada pool de `generate_synthetic.py` debe tener un número de frases múltiplo de 5.
+- Colaboración: `main` está protegida (PR con 1 aprobación, sin force push ni borrado; el admin puede saltarla). Los colaboradores trabajan en ramas y abren PR.
 
 ## Reglas no negociables
 - Nunca guardar ni loguear el texto del usuario (lo cubre `test_privacy_no_logs_and_no_files`).
