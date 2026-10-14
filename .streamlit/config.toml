@@ -1,0 +1,14 @@
+[browser]
+# Privacidad por defecto (US-05): sin telemetría de uso.
+gatherUsageStats = false
+
+[server]
+# El análisis es solo de texto; no se aceptan archivos en S1.
+maxUploadSize = 1
+
+[logger]
+level = "warning"
+
+[theme]
+base = "light"
+primaryColor = "#0B5CAD"

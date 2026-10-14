@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Artefactos generados (se reproducen con scripts/train.py)
+models/*.joblib
+reports/*.json
+!models/.gitkeep
+!reports/.gitkeep
+
+# Datos: nunca versionar mensajes reales de usuarios
+data/raw/
+data/private/
+
+# Entorno / IDE
+.env
+.vscode/
+.idea/
+.streamlit/secrets.toml
+*.log
