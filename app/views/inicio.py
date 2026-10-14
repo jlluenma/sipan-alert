@@ -1,36 +1,69 @@
 import streamlit as st
 
 import theme
-from sipan import guidance
+from sipan import config, guidance
 from sipan.analyzer import analyze
-from ui_common import PAGES
+from sipan.preprocessing import InputError
+from ui_common import EXAMPLES, PAGES, RESULT_KEY, TEXT_KEY, get_model
 
-# Mensaje ficticio; los resaltados los produce el analizador real (solo reglas).
-DEMO = ("¡Hola! Te prestamos S/ 1.000 hoy mismo. Deposita S/ 30 de trámite para recibirlo. "
-        "Autoriza el acceso a tus contactos en la app. Solo por hoy.")
+# Mensaje ficticio; los resaltados del ejemplo los produce el analizador de reglas.
+DEMO = ("Tu crédito fue aprobado sin evaluación. Para recibirlo hoy debes depositar S/ 120 "
+        "por gastos de activación. Solo por hoy.")
 demo = analyze(DEMO, use_default_model=False)
 
-st.html(
-    '<section class="sa-hero">'
-    "<h1>¿Te ofrecieron un préstamo por chat? Revísalo antes de pagar.</h1>"
-    '<p class="sa-lead">Pega el mensaje y te marcamos lo que debes revisar.</p>'
-    + theme.chat_bubble(demo.analyzed_text, demo.highlights, sender="Ejemplo de mensaje ficticio")
-    + "</section>"
-)
+with st.container(key="sa-hero-wrap"):
+    st.html(
+        '<section class="sa-hero" id="top">'
+        '<p class="sa-hero__eyebrow">Prevención financiera inteligente</p>'
+        '<h1>¿Recibiste una oferta de préstamo?</h1>'
+        '<p class="sa-lead">Pega el texto de la oferta y revisa posibles riesgos. Revísalo antes de pagar o compartir tus datos.</p>'
+        '</section>'
+    )
 
-if st.button("Revisar un mensaje", type="primary", icon=":material/search:"):
-    st.switch_page(PAGES["analizar"])
+    if get_model() is None:
+        st.warning("El modelo de IA no está disponible. Revisaremos el mensaje solo con reglas.")
 
-st.html(
-    '<ol class="sa-steps">'
-    "<li><b>1</b><span>Pega el mensaje que recibiste</span></li>"
-    "<li><b>2</b><span>Marcamos las señales de alerta</span></li>"
-    "<li><b>3</b><span>Te decimos qué hacer y a quién llamar</span></li>"
-    "</ol>"
-    '<ul class="sa-trust">'
-    f"<li>{theme.icon('lock')}No guardamos tu mensaje</li>"
-    f"<li>{theme.icon('person_off')}Sin registro ni DNI</li>"
-    f"<li>{theme.icon('volunteer_activism')}Gratis</li>"
-    "</ul>"
-    f'<p class="sa-fine">{guidance.LIMITS_SHORT} Prototipo académico de la UTP Chiclayo.</p>'
+    with st.container(key="sa-hero-form"):
+        st.text_area(
+            "Texto de la oferta",
+            key=TEXT_KEY,
+            height=116,
+            max_chars=config.MAX_TEXT_LENGTH,
+            placeholder="Pega aquí el texto de la oferta…",
+        )
+        example_col, submit_col = st.columns([1, 1], vertical_alignment="center")
+        with example_col:
+            st.html('<a class="sa-example-link" href="#ejemplo-analisis">Ver un ejemplo ↗</a>')
+        with submit_col:
+            if st.button("Analizar oferta", type="primary", icon=":material/search:", width="stretch"):
+                try:
+                    st.session_state[RESULT_KEY] = analyze(
+                        st.session_state[TEXT_KEY], model=get_model(), use_default_model=False
+                    )
+                except InputError as exc:
+                    st.error(str(exc), icon=":material/edit_note:")
+                else:
+                    st.switch_page(PAGES["resultado"])
+        st.html(
+            f'<p class="sa-privacy">{theme.icon("lock")} No incluyas datos personales.</p>'
+        )
+
+example_markup = (
+    theme.chat_bubble(demo.analyzed_text, demo.highlights, sender="Mensaje ficticio")
 )
+st.html(theme.landing_sections(example_markup))
+
+with st.container(key="sa-cta-footer"):
+    with st.container(key="sa-cta"):
+        text_col, button_col = st.columns([1, .3], vertical_alignment="center")
+        with text_col:
+            st.html(
+                '<div class="sa-cta-row" id="que-hacer"><div>'
+                '<h2>¿Tienes dudas sobre una oferta de préstamo?</h2>'
+                '<p>Revisa sus posibles señales de riesgo antes de compartir información o realizar un pago.</p>'
+                '</div></div>'
+            )
+        with button_col:
+            st.page_link(PAGES["analizar"], label="Analizar oferta ↗")
+
+    theme.render_footer(PAGES["inicio"], is_home=True)

@@ -139,7 +139,6 @@ LIMITS_NOTICE = (
     "Este resultado es orientativo. SipánAlert IA identifica señales en el texto que pegaste; "
     "no determina si una empresa o persona comete fraude ni certifica que un prestamista sea legítimo."
 )
-LIMITS_SHORT = "Es una orientación, no una acusación: no certifica si un prestamista es legítimo."
 NO_SIGNALS_NOTICE = (
     "No se observaron las señales definidas en este texto. Esto no garantiza que la oferta sea segura: "
     "el análisis solo cubre lo que dice el mensaje."
