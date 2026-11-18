@@ -412,9 +412,9 @@ def brand(*, is_home: bool) -> str:
             '<sup>IA</sup></div></a>')
 
 
-def navbar(home_path: str, guidance_path: str, *, is_home: bool) -> None:
+def navbar(home_path: str, guidance_path: str, *, is_home: bool, faq_path: str | None = None) -> None:
     with st.container(key="sa-navbar"):
-        logo_col, home_col, how_col, guide_col = st.columns([2.5, .75, 1.2, .95], vertical_alignment="center")
+        logo_col, home_col, how_col, guide_col, faq_col = st.columns([2.5, .75, 1.2, .95, .95], vertical_alignment="center")
         with logo_col:
             st.html(brand(is_home=is_home))
         with home_col:
@@ -423,6 +423,9 @@ def navbar(home_path: str, guidance_path: str, *, is_home: bool) -> None:
             st.html(f'<a class="sa-nav-link" href="{_home_anchor("como-funciona", is_home)}">Cómo funciona</a>')
         with guide_col:
             st.page_link(guidance_path, label="Qué hacer")
+        if faq_path:
+            with faq_col:
+                st.page_link(faq_path, label="Asistente")
         if not is_home:
             with st.container(key="sa-logo-click"):
                 st.button("SipánAlert IA, ir al inicio", key="sa-logo-home-button", on_click=st.switch_page, args=[home_path])
