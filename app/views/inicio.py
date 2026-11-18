@@ -1,6 +1,7 @@
 import streamlit as st
 
 import theme
+from login_gate import require_login_to_analyze
 from sipan import config
 from sipan.analyzer import analyze
 from sipan.preprocessing import InputError
@@ -20,35 +21,40 @@ with st.container(key="sa-hero-wrap"):
         '</section>'
     )
 
-    if get_model() is None:
-        st.warning("El modelo de IA no está disponible. Revisaremos el mensaje solo con reglas.")
-
     with st.container(key="sa-hero-form"):
-        st.text_area(
-            "Texto de la oferta",
-            key=TEXT_KEY,
-            height=116,
-            max_chars=config.MAX_TEXT_LENGTH,
-            placeholder="Pega aquí el texto de la oferta…",
-        )
-        example_col, submit_col = st.columns([1, 1], vertical_alignment="center")
-        with example_col:
-            st.html('<a class="sa-example-link" href="#ejemplo-analisis">Ver un ejemplo ↗</a>')
-        with submit_col:
-            if st.button("Analizar oferta", type="primary", icon=":material/search:", width="stretch"):
-                try:
-                    st.session_state[RESULT_KEY] = analyze(
-                        st.session_state[TEXT_KEY], model=get_model(), use_default_model=False
-                    )
-                except InputError as exc:
-                    st.error(str(exc), icon=":material/edit_note:")
-                else:
-                    st.switch_page(PAGES["resultado"])
-        st.html(
-            f'<p class="sa-privacy">{theme.icon("lock")} No incluyas datos personales.</p>'
-        )
+        if require_login_to_analyze("inicio"):
+            if get_model() is None:
+                st.warning("El modelo de IA no está disponible. Revisaremos el mensaje solo con reglas.")
+
+            st.text_area(
+                "Texto de la oferta",
+                key=TEXT_KEY,
+                height=116,
+                max_chars=config.MAX_TEXT_LENGTH,
+                placeholder="Pega aquí el texto de la oferta…",
+            )
+            example_col, submit_col = st.columns([1, 1], vertical_alignment="center")
+            with example_col:
+                st.html('<a class="sa-example-link" href="#ejemplo-analisis">Ver un ejemplo ↗</a>')
+            with submit_col:
+                if st.button("Analizar oferta", type="primary", icon=":material/search:", width="stretch"):
+                    try:
+                        st.session_state[RESULT_KEY] = analyze(
+                            st.session_state[TEXT_KEY], model=get_model(), use_default_model=False
+                        )
+                    except InputError as exc:
+                        st.error(str(exc), icon=":material/edit_note:")
+                    else:
+                        st.switch_page(PAGES["resultado"])
+            st.html(
+                f'<p class="sa-privacy">{theme.icon("lock")} No incluyas datos personales.</p>'
+            )
 
 st.html(theme.landing_sections(demo))
+
+# Botón flotante: mantiene el acceso al asistente sin interrumpir el análisis.
+with st.container(key="sa-chat-float"):
+    st.page_link(PAGES["faq"], label="Asistente", icon=":material/chat:")
 
 with st.container(key="sa-cta-footer"):
     with st.container(key="sa-cta"):

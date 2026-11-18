@@ -1,0 +1,8 @@
+.chat-text { white-space: normal; line-height: 1.55; font-size: .9rem; }
+.chat-text p { margin: 0 0 10px; }
+.chat-text p:last-child { margin-bottom: 0; }
+.chat-text ul { margin: 10px 0; padding-left: 20px; }
+.chat-text li { margin: 7px 0; }
+.chat-text strong { color: #222b39; font-weight: 700; }
+.chat-text a { color: #b5161a; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.chat-message { height: auto; min-height: 0; }

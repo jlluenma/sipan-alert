@@ -333,6 +333,29 @@ CSS = """
 }
 .st-key-sa-page-content .sa-sources li + li { border-top: 1px solid #E5E7EB; }
 .st-key-sa-page-content .sa-fine { margin-top: 1.5rem; }
+
+/* Cuenta y acceso */
+.sa-account-intro { display: flex; align-items: center; gap: 1rem; margin: 0 0 1.35rem; }
+.sa-account-intro__icon { display: grid; place-items: center; flex: none; width: 3.2rem; height: 3.2rem; border-radius: 1rem; background: #FFF0F0; color: #E52428; }
+.sa-account-intro__icon .sa-icon { font-size: 1.85rem; }
+.sa-account-intro h1 { margin: 0; color: #222B39; font-size: clamp(2rem, 4vw, 2.55rem); letter-spacing: -.035em; }
+.sa-account-intro p { margin: .2rem 0 0; color: #687386; font-size: 1rem; }
+.st-key-sa-account-card { max-width: 560px; margin: 0 auto 2rem; padding: 1.4rem; border: 1px solid rgba(229,231,235,.82); border-radius: 18px; background: rgba(255,255,255,.80); box-shadow: 0 12px 30px rgba(34,43,57,.06); backdrop-filter: blur(12px); }
+.st-key-sa-account-card [data-baseweb="tab-list"] { gap: 1.1rem; border-bottom: 1px solid #E5E7EB; }
+.st-key-sa-account-card [data-baseweb="tab"] { padding: .25rem 0 .75rem; font-weight: 650; }
+.st-key-sa-account-card [data-testid="stTextInput"] label { color: #273142; font-size: .9rem; font-weight: 650; }
+.st-key-sa-account-card [data-testid="stTextInput"] input { border: 1px solid #D6DAE1; border-radius: 9px; background: #fff; min-height: 2.7rem; }
+.st-key-sa-account-card [data-testid="stTextInput"] input:focus { border-color: #E52428; box-shadow: 0 0 0 3px rgba(229,36,40,.12); }
+.st-key-sa-account-card [data-testid="stForm"] { border: 0; padding: 1.2rem 0 0; }
+.st-key-sa-account-card [data-testid="stFormSubmitButton"] button { width: 100%; min-height: 2.8rem; border-radius: 9px; font-weight: 700; }
+.sa-nav-link--account { display: inline-flex; align-items: center; gap: .28rem; font-weight: 650; }
+.sa-nav-link--account .sa-icon { font-size: 1.18rem; vertical-align: 0; }
+
+/* Acceso persistente al asistente en la portada. */
+.st-key-sa-chat-float { position: fixed; right: clamp(18px, 3vw, 38px); bottom: clamp(18px, 3vw, 34px); z-index: 100; }
+.st-key-sa-chat-float [data-testid="stPageLink"] a { display: inline-flex; align-items: center; gap: .45rem; min-height: 46px; padding: .65rem 1rem; border-radius: 999px; background: #E52428 !important; color: #fff !important; font-size: .92rem; font-weight: 700; text-decoration: none !important; box-shadow: 0 10px 24px rgba(229,36,40,.30); }
+.st-key-sa-chat-float [data-testid="stPageLink"] a:hover { background: #BD181C !important; color: #fff !important; text-decoration: none !important; transform: translateY(-1px); }
+.st-key-sa-chat-float [data-testid="stPageLink"] [data-testid="stIconMaterial"] { color: #fff !important; }
 @media (max-width: 700px) {
   .st-key-sa-hero-wrap { padding: 1.1rem 1rem 1.25rem; }
   .sa-hero h1 { font-size: clamp(2rem,8vw,2.5rem); }
@@ -412,9 +435,10 @@ def brand(*, is_home: bool) -> str:
             '<sup>IA</sup></div></a>')
 
 
-def navbar(home_path: str, guidance_path: str, *, is_home: bool, faq_path: str | None = None) -> None:
+def navbar(home_path: str, guidance_path: str, *, is_home: bool, faq_path: str | None = None,
+           account_path: str | None = None) -> None:
     with st.container(key="sa-navbar"):
-        logo_col, home_col, how_col, guide_col, faq_col = st.columns([2.5, .75, 1.2, .95, .95], vertical_alignment="center")
+        logo_col, home_col, how_col, guide_col, faq_col, account_col = st.columns([2.5, .75, 1.2, .95, .95, .8], vertical_alignment="center")
         with logo_col:
             st.html(brand(is_home=is_home))
         with home_col:
@@ -426,6 +450,12 @@ def navbar(home_path: str, guidance_path: str, *, is_home: bool, faq_path: str |
         if faq_path:
             with faq_col:
                 st.page_link(faq_path, label="Asistente")
+        if account_path:
+            with account_col:
+                st.html(
+                    '<a class="sa-nav-link sa-nav-link--account" href="/cuenta">'
+                    f'{icon("account_circle")}<span>Cuenta</span></a>'
+                )
         if not is_home:
             with st.container(key="sa-logo-click"):
                 st.button("SipánAlert IA, ir al inicio", key="sa-logo-home-button", on_click=st.switch_page, args=[home_path])
@@ -459,7 +489,7 @@ def landing_sections(example: AnalysisResult) -> str:
         '<section class="sa-home-section sa-home-section--soft" id="privacidad"><div class="sa-section-inner">'
         '<div class="sa-protect-heading"><h2 class="sa-home-title">Tu información merece protección</h2><p class="sa-home-subtitle">Revisa ofertas de préstamo sin proporcionar datos personales.</p></div>'
         '<div class="sa-protect-grid"><article class="sa-protect-card"><span class="sa-protect-icon">'
-        f'{icon("person_off")}</span><h3>Sin registro</h3><p>Usa el analizador sin crear cuentas.</p><b>Sin cuenta ni DNI</b></article>'
+        f'{icon("account_circle")}</span><h3>Acceso protegido</h3><p>Inicia sesión para analizar una oferta y consultar tus aportes.</p><b>Cuenta sin DNI</b></article>'
         '<article class="sa-protect-card"><span class="sa-protect-icon">'
         f'{icon("lock")}</span><h3>Datos ocultos</h3><p>Antes de revisar el mensaje ocultamos teléfonos, DNI, correos y cuentas.</p><b>Ocultamos tus datos</b></article>'
         '<article class="sa-protect-card"><span class="sa-protect-icon">'
@@ -537,6 +567,12 @@ def verdict(result: AnalysisResult) -> str:
         return (f'<section class="sa-verdict sa-verdict--alert" role="status">{icon("warning")}<div>'
                 f'<h2>Encontramos {count} {noun}</h2>'
                 f'<p>Revisa lo marcado antes de pagar o dar tus datos.</p></div></section>')
+    possible_count = len(result.possible_signals)
+    if possible_count:
+        noun = "posible señal de alerta" if possible_count == 1 else "posibles señales de alerta"
+        return (f'<section class="sa-verdict sa-verdict--alert" role="status">{icon("warning")}<div>'
+                f'<h2>Encontramos {possible_count} {noun}</h2>'
+                f'<p>El texto necesita una revisión cuidadosa antes de pagar o compartir datos.</p></div></section>')
     return (f'<section class="sa-verdict sa-verdict--clear" role="status">{icon("info")}<div>'
             f'<h2>No encontramos señales de alerta</h2>'
             f'<p>Eso no garantiza que la oferta sea segura: solo revisamos el texto.</p></div></section>')

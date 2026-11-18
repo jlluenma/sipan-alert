@@ -90,6 +90,20 @@ def test_offer_without_signals_shows_clear_verdict(app):
     assert "no garantiza que la oferta sea segura" in html
 
 
+def test_possible_signal_never_uses_clear_verdict():
+    from sipan.analyzer import AnalysisResult, Signal
+
+    possible = Signal(
+        label="pago_anticipado", title="x", explanation="x", source="modelo", confidence="baja",
+        probability=0.4, evidence=(), rule_descriptions=(), model_terms=(), recommendations=("x",),
+    )
+    result = AnalysisResult(signals=(), possible_signals=(possible,), model_available=True, model_version="v1")
+    import theme
+    html = theme.verdict(result)
+    assert "posible señal" in html
+    assert "No encontramos" not in html
+
+
 def test_empty_input_shows_error(app):
     at = app.switch_page("views/analizar.py").run()
     next(b for b in at.button if b.label == "Revisar mensaje").click().run()

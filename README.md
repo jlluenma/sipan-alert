@@ -50,6 +50,22 @@ python scripts/train.py
 streamlit run app/streamlit_app.py
 ```
 
+### Interfaz React + API (migración en curso)
+
+La interfaz nueva convive temporalmente con Streamlit. Abre dos terminales desde la raíz del proyecto:
+
+```powershell
+# Terminal 1: API Python
+.venv\Scripts\python -m uvicorn api.main:app --host 127.0.0.1 --port 8015
+
+# Terminal 2: interfaz React
+cd frontend
+npm install
+npm run dev
+```
+
+Luego abre `http://localhost:5173`. La API usa el mismo núcleo de análisis y la misma base PostgreSQL que Streamlit.
+
 Para detener la app, presiona `Ctrl + C` en la terminal. Las siguientes veces solo necesitas el paso 2 (activar) y el paso 5.
 
 En Linux o macOS: `python3 -m venv .venv` y `source .venv/bin/activate`.
@@ -172,18 +188,50 @@ Después abre un PR hacia `main` en GitHub. Cuando se mergea, la rama se borra s
 - La telemetría de Streamlit está desactivada (`.streamlit/config.toml`).
 - El modelo se carga solo si su huella SHA-256 coincide con la registrada al entrenar. Nunca cargues archivos `.joblib` de origen desconocido.
 
-## Preparación para conexión a base de datos
+## Aprendizaje continuo y PostgreSQL
 
-El proyecto incluye `sipan/database.py` como punto único para conectar una base de datos en una etapa posterior. **Todavía no se ha seleccionado ningún motor**, por lo que no se crea una base de datos, no se crean tablas y la aplicación sigue funcionando sin conexión.
+El análisis ordinario sigue procesando el texto en memoria. Desde el resultado, una persona puede decidir compartir una copia anonimizada para revisión. Los aportes consentidos se almacenan en PostgreSQL mediante SQLAlchemy.
 
-Cuando el equipo defina si utilizará PostgreSQL, MySQL/MariaDB, SQLite u otro motor compatible, se deberá:
+1. Analiza un mensaje y selecciona **Compartir para revisión** después de revisar la copia anonimizada y aceptar el consentimiento.
+2. Guarda el ID y el código de eliminación que muestra la aplicación. El código sirve para borrar el contenido del aporte desde **Aprendizaje continuo**.
+3. Abre la página **Aprendizaje continuo** dentro de la aplicación. La bandeja muestra aportes pendientes y los grupos de mensajes similares como posibles patrones emergentes.
+4. Valida, corrige o rechaza cada aporte. Una agrupación solo prioriza la revisión y nunca confirma una modalidad de fraude.
+5. Crea una versión del dataset. Solo incorpora aportes validados sin duplicados, conserva su procedencia y separa los grupos similares entre `entrenamiento.csv` y `evaluacion.csv`.
 
-1. Instalar SQLAlchemy y el controlador específico del motor elegido.
-2. Definir la variable de entorno `DATABASE_URL` (puedes tomar `.env.example` como referencia).
-3. Usar `sipan.database.get_engine()` desde el módulo que necesite acceder a los datos.
-4. Ejecutar `sipan.database.test_connection()` para comprobar la conexión.
+El entrenamiento automático no forma parte de este piloto. `scripts/train.py` rechaza aportes voluntarios pendientes o rechazados y también rechaza la partición de evaluación. La futura autenticación, el historial de cuentas y los permisos del panel se integrarán sobre estos módulos por el responsable de esa funcionalidad.
 
-No guardes contraseñas ni credenciales directamente en el código o en Git. El módulo de conexión no se ejecuta automáticamente al iniciar la aplicación.
+## PostgreSQL y migraciones
+
+Configura las conexiones fuera del repositorio mediante `.env` o variables del sistema.
+
+```env
+DATABASE_URL=postgresql+psycopg://USUARIO:CONTRASENA@localhost:5432/sipanalert_db
+DATABASE_MIGRATION_URL=postgresql+psycopg://USUARIO:CONTRASENA@localhost:5432/sipanalert_db
+```
+
+Revisa y aplica la migración inicial antes de ejecutar la aplicación con persistencia:
+
+```bash
+alembic upgrade head
+```
+
+Las revisiones de esquema posteriores se generan con `alembic revision --autogenerate -m "descripcion"` y se revisan antes de aplicar `alembic upgrade head`. No guardes credenciales en Git.
+
+### Login y roles
+
+La página **Cuenta** permite crear cuentas con rol `usuario` e iniciar sesión. Crea la primera cuenta administradora tras ejecutar las migraciones:
+
+```bash
+python scripts/create_admin.py admin@ejemplo.com
+```
+
+Los roles `revisor` y `administrador` acceden al panel de aprendizaje. Las revisiones registran la cuenta que tomó la decisión.
+
+Otorga un rol a una cuenta existente con:
+
+```bash
+python scripts/grant_role.py revisor@ejemplo.com revisor
+```
 
 ## Fuera del Sprint 1
 
