@@ -27,3 +27,11 @@ data/private/
 node_modules/
 frontend/dist/
 .taste-skill/
+
+# Documentacion local de agentes (no versionada)
+CLAUDE.md
+AGENTS.md
+BITACORA.md
+INDICE.md
+*.agent.md
+.agents/
