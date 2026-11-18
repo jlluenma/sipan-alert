@@ -172,6 +172,19 @@ Después abre un PR hacia `main` en GitHub. Cuando se mergea, la rama se borra s
 - La telemetría de Streamlit está desactivada (`.streamlit/config.toml`).
 - El modelo se carga solo si su huella SHA-256 coincide con la registrada al entrenar. Nunca cargues archivos `.joblib` de origen desconocido.
 
+## Preparación para conexión a base de datos
+
+El proyecto incluye `sipan/database.py` como punto único para conectar una base de datos en una etapa posterior. **Todavía no se ha seleccionado ningún motor**, por lo que no se crea una base de datos, no se crean tablas y la aplicación sigue funcionando sin conexión.
+
+Cuando el equipo defina si utilizará PostgreSQL, MySQL/MariaDB, SQLite u otro motor compatible, se deberá:
+
+1. Instalar SQLAlchemy y el controlador específico del motor elegido.
+2. Definir la variable de entorno `DATABASE_URL` (puedes tomar `.env.example` como referencia).
+3. Usar `sipan.database.get_engine()` desde el módulo que necesite acceder a los datos.
+4. Ejecutar `sipan.database.test_connection()` para comprobar la conexión.
+
+No guardes contraseñas ni credenciales directamente en el código o en Git. El módulo de conexión no se ejecuta automáticamente al iniciar la aplicación.
+
 ## Fuera del Sprint 1
 
 - **Sprint 2:** calculadora de pagos (US-06), más fuentes oficiales (US-07) y ejemplos didácticos (US-12).
