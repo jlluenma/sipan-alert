@@ -18,3 +18,8 @@ data/private/
 .idea/
 .streamlit/secrets.toml
 *.log
+
+# Variables de entorno y credenciales
+.env
+.env.*
+!.env.example
