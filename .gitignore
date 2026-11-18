@@ -18,3 +18,15 @@ data/private/
 .idea/
 .streamlit/secrets.toml
 *.log
+
+# Archivos y documentacion para agentes (estrictamente local)
+CLAUDE.md
+AGENTS.md
+BITACORA.md
+INDICE.md
+.agents/
+.claude/
+docs/agents/
+agent_docs/
+*.agent.md
+
