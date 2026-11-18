@@ -1,7 +1,8 @@
-"""Utilidades compartidas por las vistas: rutas, sesión y modelo cacheado.
+"""Utilidades compartidas por las vistas: rutas, sesión, modelo cacheado y auth.
 
 Privacidad: el texto y el resultado viven solo en `st.session_state` (memoria
 del servidor, por pestaña) y se descartan al cerrar la sesión. Nada se escribe a disco.
+Las contraseñas se almacenan solo como hash bcrypt en `data/users.db` (gitignored).
 """
 
 from __future__ import annotations
@@ -9,9 +10,11 @@ from __future__ import annotations
 import streamlit as st
 
 from sipan.analyzer import AnalysisResult
+from sipan.auth import AuthUser
 from sipan.model import ModelUnavailable, SignalModel, load_model
 
 PAGES = {
+    "login": "views/login.py",
     "inicio": "views/inicio.py",
     "analizar": "views/analizar.py",
     "resultado": "views/resultado.py",
@@ -20,6 +23,7 @@ PAGES = {
 
 TEXT_KEY = "offer_text"
 RESULT_KEY = "analysis"
+AUTH_KEY = "auth_user"
 
 # Ejemplos ficticios del Anexo C (APF1) para demostraciones.
 EXAMPLES = {
@@ -44,5 +48,26 @@ def get_result() -> AnalysisResult | None:
 
 
 def clear_analysis() -> None:
+    st.session_state.pop(RESULT_KEY, None)
+    st.session_state[TEXT_KEY] = ""
+
+
+def current_user() -> AuthUser | None:
+    user = st.session_state.get(AUTH_KEY)
+    return user if isinstance(user, AuthUser) else None
+
+
+def require_auth() -> AuthUser:
+    """Protege una vista. Si no hay sesión, redirige al login."""
+    user = current_user()
+    if user is None:
+        st.switch_page(PAGES["login"])
+        st.stop()
+    return user
+
+
+def logout() -> None:
+    """Cierra sesión y limpia el estado volátil del análisis."""
+    st.session_state.pop(AUTH_KEY, None)
     st.session_state.pop(RESULT_KEY, None)
     st.session_state[TEXT_KEY] = ""

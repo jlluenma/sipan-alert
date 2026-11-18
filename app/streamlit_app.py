@@ -11,7 +11,7 @@ if str(ROOT) not in sys.path:
 import streamlit as st  # noqa: E402
 
 import theme  # noqa: E402
-from ui_common import PAGES  # noqa: E402
+from ui_common import PAGES, current_user, logout  # noqa: E402
 
 st.set_page_config(
     page_title="SipánAlert IA",
@@ -20,14 +20,23 @@ st.set_page_config(
 )
 theme.inject_css()
 
-navigation = st.navigation(
-    [
-        st.Page(PAGES["inicio"], title="Inicio", icon=":material/home:", default=True),
-        st.Page(PAGES["analizar"], title="Revisar mensaje", icon=":material/search:"),
-        st.Page(PAGES["resultado"], title="Resultado", visibility="hidden"),
-        st.Page(PAGES["orientacion"], title="Qué hacer", icon=":material/support:"),
-    ],
-    position="hidden",
+user = current_user()
+# El login es opcional (habilita funciones futuras como el historial). El
+# analizador funciona sin sesión, así que el default es siempre Inicio.
+pages = [
+    st.Page(PAGES["inicio"], title="Inicio", icon=":material/home:", default=True),
+    st.Page(PAGES["analizar"], title="Revisar mensaje", icon=":material/search:"),
+    st.Page(PAGES["resultado"], title="Resultado", visibility="hidden"),
+    st.Page(PAGES["orientacion"], title="Qué hacer", icon=":material/support:"),
+    st.Page(PAGES["login"], title="Entrar", visibility="hidden"),
+]
+navigation = st.navigation(pages, position="hidden")
+theme.navbar(
+    PAGES["inicio"],
+    PAGES["orientacion"],
+    PAGES["login"],
+    is_home=navigation.url_path == "",
+    username=user.username if user else None,
+    on_logout=logout if user else None,
 )
-theme.navbar(PAGES["inicio"], PAGES["orientacion"], is_home=navigation.url_path == "")
 navigation.run()

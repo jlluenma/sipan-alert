@@ -1,4 +1,4 @@
-"""Pruebas de la interfaz Streamlit (4 vistas) con AppTest, sin navegador."""
+"""Pruebas de la interfaz Streamlit (5 vistas: login + 4 vistas protegidas) con AppTest."""
 
 from pathlib import Path
 
@@ -6,6 +6,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 from sipan import config, guidance
+from sipan.auth import AuthUser, upsert_user
 
 APP = str(Path(__file__).resolve().parent.parent / "app" / "streamlit_app.py")
 
@@ -16,13 +17,34 @@ def _app_on_path(monkeypatch):
 
 
 @pytest.fixture
-def app(model, monkeypatch):
-    # La app usa el modelo del fixture (entrenado en temporal), no models/.
+def auth_db(monkeypatch, tmp_path):
+    """SQLite temporal con un usuario de prueba, aislado por test."""
+    db = tmp_path / "users.db"
+    monkeypatch.setattr("sipan.auth.DB_PATH", db)
+    upsert_user("tester", "clave-de-prueba", path=db)
+    return db
+
+
+def _primed_app(model, monkeypatch) -> AppTest:
     import ui_common
 
     ui_common.get_model.clear()
     monkeypatch.setattr(ui_common, "load_model", lambda: model)
-    return AppTest.from_file(APP, default_timeout=60).run()
+    return AppTest.from_file(APP, default_timeout=60)
+
+
+@pytest.fixture
+def anon_app(model, monkeypatch, auth_db):
+    """App sin sesión: la landing está abierta y «Entrar» es solo un enlace del navbar."""
+    return _primed_app(model, monkeypatch).run()
+
+
+@pytest.fixture
+def app(model, monkeypatch, auth_db):
+    """App con sesión ya iniciada como 'tester'. Reemplaza el fixture previo."""
+    at = _primed_app(model, monkeypatch)
+    at.session_state["auth_user"] = AuthUser(username="tester")
+    return at.run()
 
 
 def _html(at) -> str:
@@ -36,16 +58,73 @@ def _analyze(at, text):
     return at
 
 
+# --- Flujo de autenticación (US-AUTH) ---
+
+def test_anonymous_lands_on_home(anon_app):
+    """Sin sesión la landing es accesible; «Entrar» queda como enlace del navbar."""
+    assert not anon_app.exception
+    assert "¿Recibiste una oferta de préstamo?" in _html(anon_app)
+    # «Entrar» vive como page_link del navbar, no en el HTML inline.
+    assert "Entrar" in [p.label for p in anon_app.get("page_link")]
+    # La landing no pide credenciales ni texto del usuario.
+    assert [t.key for t in anon_app.text_input] == []
+
+
+def test_anonymous_can_analyze_offer(anon_app):
+    """Login opcional: el analizador funciona sin iniciar sesión."""
+    at = _analyze(anon_app, "Deposita S/ 30 para liberar tu préstamo de S/ 500.")
+    assert not at.exception
+    html = _html(at)
+    assert "Encontramos" in html and "señal" in html
+    assert guidance.LABEL_INFO["pago_anticipado"].short in html
+
+
+def test_successful_login_goes_to_home(anon_app):
+    at = anon_app.switch_page("views/login.py").run()
+    at.text_input(key="login_username").input("tester").run()
+    at.text_input(key="login_password").input("clave-de-prueba").run()
+    next(b for b in at.button if b.label == "Entrar").click().run()
+    assert not at.exception
+    html = _html(at)
+    assert "¿Recibiste una oferta de préstamo?" in html
+
+
+def test_wrong_login_shows_error(anon_app):
+    at = anon_app.switch_page("views/login.py").run()
+    at.text_input(key="login_username").input("tester").run()
+    at.text_input(key="login_password").input("mala-clave").run()
+    next(b for b in at.button if b.label == "Entrar").click().run()
+    assert any("incorrectos" in e.value.lower() for e in at.error)
+
+
+def test_logout_clears_session(app):
+    assert app.session_state.get("auth_user") is not None
+    next(b for b in app.button if b.label == "Salir").click().run()
+    assert app.session_state.get("auth_user") is None
+    # Tras cerrar sesión el navbar vuelve a mostrar «Entrar» y el botón «Salir» desaparece.
+    assert "Entrar" in [p.label for p in app.get("page_link")]
+    assert "Salir" not in [b.label for b in app.button]
+
+
+def test_navbar_shows_username_when_authenticated(app):
+    html = _html(app)
+    assert "tester" in html
+    assert "sa-nav-user" in html
+
+
+# --- Comportamiento ya existente (ahora con usuario autenticado) ---
+
 def test_home_explains_with_highlighted_demo(app):
     assert not app.exception
     html = _html(app)
     assert "Revísalo antes de pagar" in html
-    # La demo usa el analizador real: resalta 2 frases y lista sus 3 señales (CO2 no resalta).
     assert html.count('class="sa-mark"') == 2
     for label in ("pago_anticipado", "amenaza_presion", "condiciones_opacas"):
         assert guidance.LABEL_INFO[label].short in html
     assert guidance.LIMITS_SHORT in html
-    assert [b.label for b in app.button] == ["Analizar oferta"]
+    labels = [b.label for b in app.button]
+    assert "Analizar oferta" in labels
+    assert "Salir" in labels
 
 
 def test_home_form_analyzes_directly(app):
@@ -73,12 +152,14 @@ def test_analyze_flow_shows_verdict_highlights_and_limits(app):
     assert guidance.LIMITS_SHORT in html
 
 
-def test_result_shows_when_model_is_unavailable(monkeypatch):
+def test_result_shows_when_model_is_unavailable(monkeypatch, auth_db):
     import ui_common
 
     ui_common.get_model.clear()
     monkeypatch.setattr(ui_common, "load_model", lambda: None)
-    at = _analyze(AppTest.from_file(APP, default_timeout=60).run(), "Deposita S/ 30 para liberar tu préstamo.")
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["auth_user"] = AuthUser(username="tester")
+    at = _analyze(at.run(), "Deposita S/ 30 para liberar tu préstamo.")
     assert guidance.MODEL_UNAVAILABLE_NOTICE in _html(at)
     ui_common.get_model.clear()
 
@@ -108,7 +189,6 @@ def test_result_without_analysis(app):
     html = _html(at)
     assert "Aún no hay resultado" in html
     assert "Revisar un mensaje" in [b.label for b in at.button]
-    # Fuera de Inicio, las anclas de secciones vuelven a Inicio.
     assert 'href="/#como-funciona"' in html
 
 
@@ -131,15 +211,28 @@ def test_guidance_without_result_shows_general_tips(app):
 
 
 def test_no_personal_data_fields(app):
-    """US-05: ninguna vista pide DNI, contactos ni crea cuentas."""
+    """US-05 + US-AUTH: las vistas de análisis no piden datos personales.
+
+    El formulario de login (tester y contraseña) no cuenta: no se pide DNI,
+    correo ni teléfono. Verificado aparte.
+    """
     for page in ("inicio", "analizar", "resultado", "orientacion"):
         at = app.switch_page(f"views/{page}.py").run()
-        assert len(at.text_input) == 0
+        assert len(at.text_input) == 0, f"{page} no debe pedir texto plano al usuario"
         assert [t.key for t in at.text_area] in ([], ["offer_text"])
         assert len(at.get("file_uploader")) == 0
 
 
-def test_model_unavailable_warning(monkeypatch):
+def test_login_form_only_asks_username_and_password(anon_app):
+    """US-AUTH: el login no pide DNI, correo ni teléfono."""
+    at = anon_app.switch_page("views/login.py").run()
+    keys = [t.key for t in at.text_input]
+    assert keys == ["login_username", "login_password"]
+    assert len(at.text_area) == 0
+    assert len(at.get("file_uploader")) == 0
+
+
+def test_model_unavailable_warning(monkeypatch, auth_db):
     import ui_common
     from sipan.model import ModelUnavailable
 
@@ -148,7 +241,9 @@ def test_model_unavailable_warning(monkeypatch):
 
     ui_common.get_model.clear()
     monkeypatch.setattr(ui_common, "load_model", _fail)
-    at = AppTest.from_file(APP, default_timeout=60).run()
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["auth_user"] = AuthUser(username="tester")
+    at = at.run()
     at.switch_page("views/analizar.py").run()
     assert "no está disponible" in at.warning[0].value
     ui_common.get_model.clear()

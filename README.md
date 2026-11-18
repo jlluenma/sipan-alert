@@ -46,7 +46,10 @@ pip install -r requirements.txt
 # 4. Entrenar el modelo (solo la primera vez, unos 5 segundos)
 python scripts/train.py
 
-# 5. Abrir la app (se abre en http://localhost:8501)
+# 5. Crear los usuarios iniciales (pide una contraseña interactivamente, no la pases por argumento)
+python scripts/add_user.py --users usr1,usr2,usr3,usr4,usr5,usr6,usr7 --same-password
+
+# 6. Abrir la app (se abre en http://localhost:8501)
 streamlit run app/streamlit_app.py
 ```
 
@@ -85,20 +88,23 @@ sipan/                     Núcleo (no depende de Streamlit)
   model.py                 Pipeline TF-IDF + LogReg, carga con verificación SHA-256 y términos influyentes
   analyzer.py              analyze(texto) -> AnalysisResult (ML + reglas + avisos)
   guidance.py              Textos de orientación, fuentes oficiales y contactos
+  auth.py                  Autenticación básica (bcrypt + SQLite) para login
 app/
-  streamlit_app.py         Entrada y navegación (navbar y footer propios)
+  streamlit_app.py         Entrada y navegación (login opcional desde el navbar)
   theme.py                 Sistema visual: tokens, CSS y componentes HTML (navbar, landing, burbuja con resaltados, tarjetas, footer)
   assets/                  Logo e ilustraciones
-  ui_common.py             Sesión, modelo cacheado y ejemplos
-  views/                   inicio · analizar · resultado · orientacion
+  ui_common.py             Sesión, modelo cacheado, ejemplos y helpers de auth
+  views/                   login · inicio · analizar · resultado · orientacion
 data/
   LABELING_GUIDE.md        Manual de etiquetado (SECI: externalización)
   dataset_v1.csv           Corpus sintético versionado
+  users.db                 Hashes bcrypt de usuarios (gitignored, lo crea scripts/add_user.py)
 scripts/
   generate_synthetic.py    Generador del corpus
   train.py                 Entrenamiento, evaluación sin fuga y reporte
+  add_user.py              Crea o actualiza usuarios (pide contraseña con getpass)
 reports/                   Métricas versionadas (evidencia del sprint)
-tests/                     pytest: entrada, anonimización, reglas, dataset, modelo, analizador, privacidad y UI
+tests/                     pytest: entrada, anonimización, reglas, dataset, modelo, analizador, privacidad, UI y auth
 ```
 
 ## Diseño
@@ -167,8 +173,8 @@ Después abre un PR hacia `main` en GitHub. Cuando se mergea, la rama se borra s
 
 ## Privacidad
 
-- No se requiere cuenta, DNI ni acceso a contactos.
-- El texto se procesa en memoria (`st.session_state`) y **no se guarda** en disco ni en logs. Lo verifica `tests/test_analyzer.py::test_privacy_no_logs_and_no_files`.
+- **Login opcional (Sprint 2):** el servicio principal (analizar ofertas) **no requiere cuenta**. El login es un enlace del navbar que solo habilita funciones posteriores (p. ej. historial de consultas, que trabaja otro compañero). Nunca se piden DNI, correo ni teléfono; solo un identificador de usuario (`usr1`, `usr2`, …) y una contraseña almacenada como hash **bcrypt** en `data/users.db`, que está en `.gitignore` y nunca se versiona. Los usuarios se crean con `python scripts/add_user.py`, que pide la contraseña interactivamente (nunca por argumento ni variable de entorno).
+- **Texto analizado:** el texto que pegas se procesa en memoria (`st.session_state`) y **no se guarda** en disco ni en logs. Lo verifica `tests/test_analyzer.py::test_privacy_no_logs_and_no_files`.
 - La telemetría de Streamlit está desactivada (`.streamlit/config.toml`).
 - El modelo se carga solo si su huella SHA-256 coincide con la registrada al entrenar. Nunca cargues archivos `.joblib` de origen desconocido.
 

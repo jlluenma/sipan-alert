@@ -162,6 +162,12 @@ CSS = """
 .st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2) { margin-left: auto; }
 .st-key-sa-navbar [data-testid="stPageLink"] a, .st-key-sa-navbar .stMarkdown a, .st-key-sa-navbar .sa-nav-link { color: #222B39 !important; background: transparent !important; border-radius: 4px; padding: .35rem .2rem; font-size: .88rem; text-decoration: none !important; }
 .st-key-sa-navbar [data-testid="stPageLink"] a:hover, .st-key-sa-navbar .stMarkdown a:hover, .st-key-sa-navbar .sa-nav-link:hover { color: #E52428 !important; text-decoration: underline !important; }
+.sa-nav-user { display: inline-flex; align-items: center; gap: .3rem; font-size: .88rem; color: var(--sa-muted); white-space: nowrap; }
+.sa-nav-user .sa-icon { color: var(--sa-teal); }
+.st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child > [data-testid="stVerticalBlock"] { flex-direction: row; align-items: center; gap: .55rem; justify-content: flex-end; flex-wrap: nowrap; }
+.st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child [data-testid="stElementContainer"] { width: auto; }
+.st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child [data-testid="stButton"] button { background: transparent; color: #202938; border: 1px solid #E5E7EB; min-height: 2.1rem; padding: .25rem .75rem; font-size: .85rem; font-weight: 500; border-radius: 6px; white-space: nowrap; box-shadow: none; }
+.st-key-sa-navbar [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child [data-testid="stButton"] button:hover { background: var(--sa-teal-soft); color: var(--sa-teal); border-color: var(--sa-teal); }
 .st-key-sa-navbar { position: relative; }
 .st-key-sa-navbar .st-key-sa-logo-click { position: absolute !important; top: 0; left: 64px; z-index: 20; width: 195px; height: 76px; pointer-events: auto; }
 .st-key-sa-logo-click [data-testid="stVerticalBlock"] { position: relative; width: 100%; height: 100%; min-height: 100%; gap: 0 !important; }
@@ -412,9 +418,11 @@ def brand(*, is_home: bool) -> str:
             '<sup>IA</sup></div></a>')
 
 
-def navbar(home_path: str, guidance_path: str, *, is_home: bool) -> None:
+def navbar(home_path: str, guidance_path: str, login_path: str, *, is_home: bool,
+           username: str | None = None, on_logout=None) -> None:
     with st.container(key="sa-navbar"):
-        logo_col, home_col, how_col, guide_col = st.columns([2.5, .75, 1.2, .95], vertical_alignment="center")
+        logo_col, home_col, how_col, guide_col, user_col = st.columns(
+            [2.1, .75, 1.2, .95, 1.1], vertical_alignment="center")
         with logo_col:
             st.html(brand(is_home=is_home))
         with home_col:
@@ -423,6 +431,18 @@ def navbar(home_path: str, guidance_path: str, *, is_home: bool) -> None:
             st.html(f'<a class="sa-nav-link" href="{_home_anchor("como-funciona", is_home)}">Cómo funciona</a>')
         with guide_col:
             st.page_link(guidance_path, label="Qué hacer")
+        with user_col:
+            if username:
+                st.html(
+                    f'<span class="sa-nav-user">{icon("account_circle")}{escape(username)}</span>'
+                )
+                if on_logout is not None and st.button(
+                    "Salir", key="sa-logout-button", icon=":material/logout:"
+                ):
+                    on_logout()
+                    st.rerun()
+            else:
+                st.page_link(login_path, label="Entrar")
         if not is_home:
             with st.container(key="sa-logo-click"):
                 st.button("SipánAlert IA, ir al inicio", key="sa-logo-home-button", on_click=st.switch_page, args=[home_path])

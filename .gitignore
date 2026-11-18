@@ -12,6 +12,10 @@ models/*
 data/raw/
 data/private/
 
+# Credenciales: la base de usuarios contiene hashes bcrypt, no se versiona
+data/users.db
+data/users.db-journal
+
 # Entorno / IDE
 .env
 .vscode/
