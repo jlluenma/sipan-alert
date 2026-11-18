@@ -50,6 +50,22 @@ python scripts/train.py
 streamlit run app/streamlit_app.py
 ```
 
+### Interfaz React + API (migración en curso)
+
+La interfaz nueva convive temporalmente con Streamlit. Abre dos terminales desde la raíz del proyecto:
+
+```powershell
+# Terminal 1: API Python
+.venv\Scripts\python -m uvicorn api.main:app --host 127.0.0.1 --port 8015
+
+# Terminal 2: interfaz React
+cd frontend
+npm install
+npm run dev
+```
+
+Luego abre `http://localhost:5173`. La API usa el mismo núcleo de análisis y la misma base PostgreSQL que Streamlit.
+
 Para detener la app, presiona `Ctrl + C` en la terminal. Las siguientes veces solo necesitas el paso 2 (activar) y el paso 5.
 
 En Linux o macOS: `python3 -m venv .venv` y `source .venv/bin/activate`.
@@ -200,6 +216,22 @@ alembic upgrade head
 ```
 
 Las revisiones de esquema posteriores se generan con `alembic revision --autogenerate -m "descripcion"` y se revisan antes de aplicar `alembic upgrade head`. No guardes credenciales en Git.
+
+### Login y roles
+
+La página **Cuenta** permite crear cuentas con rol `usuario` e iniciar sesión. Crea la primera cuenta administradora tras ejecutar las migraciones:
+
+```bash
+python scripts/create_admin.py admin@ejemplo.com
+```
+
+Los roles `revisor` y `administrador` acceden al panel de aprendizaje. Las revisiones registran la cuenta que tomó la decisión.
+
+Otorga un rol a una cuenta existente con:
+
+```bash
+python scripts/grant_role.py revisor@ejemplo.com revisor
+```
 
 ## Fuera del Sprint 1
 

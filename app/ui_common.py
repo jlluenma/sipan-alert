@@ -18,6 +18,7 @@ PAGES = {
     "orientacion": "views/orientacion.py",
     "aprendizaje": "views/aprendizaje.py",
     "faq": "views/faq.py",
+    "cuenta": "views/cuenta.py",
 }
 
 TEXT_KEY = "offer_text"

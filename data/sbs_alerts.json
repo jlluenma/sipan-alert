@@ -1,0 +1,22 @@
+{
+  "source": "https://www.sbs.gob.pe/noticia/detallenoticia/idnoticia/3899",
+  "title": "SBS advierte sobre aplicativos que ofrecen préstamos de dinero",
+  "published_at": "2026-03-03",
+  "reviewed_at": "2026-11-18",
+  "scope": "Aplicativos identificados en un comunicado preventivo de la SBS. No equivale a una sentencia judicial ni prueba la identidad de un remitente.",
+  "entities": [
+    {"name":"Monedaya pro- Préstamo seguro","aliases":["Monedaya pro"],"package":"com.monedayapro.android.app"},
+    {"name":"Mano Préstamo - Credito Rapido","aliases":["Mano Prestamo"],"package":"com.mano.prestamo.creditos.rapidos"},
+    {"name":"Yapi Cash","aliases":[],"package":"com.yapi.peru.prestamo"},
+    {"name":"Acreditaya-préstamo fácil","aliases":["Acreditaya"],"package":"com.acredi.taya.app.mobile"},
+    {"name":"CreContigo-Préstamo Rápido","aliases":["CreContigo"],"package":"com.crecriendo.contigo"},
+    {"name":"Sol Dinero - Prestamos Peru","aliases":["Sol Dinero"],"package":"sol.dinero.prestamos.peru.efectivo.rapido.telecredito"},
+    {"name":"CachaiCredito -Préstamo rápido","aliases":["CachaiCredito"],"package":"com.cashiper.loan"},
+    {"name":"QullqiFacil-Cash Apoyo","aliases":["QullqiFacil"],"package":"qullqi.facil.solvencia.emprestitos"},
+    {"name":"Seda Credito-Préstamo Personal","aliases":["Seda Credito"],"package":"sedacredito.pe.credit.cash"},
+    {"name":"CredEke - Préstamo fácil","aliases":["CredEke"],"package":"com.credeke.app"},
+    {"name":"V Crédito-Préstamo fácil","aliases":["V Credito"],"package":"peru.easy.loan.viva.credito"},
+    {"name":"Soles parada-peru credito","aliases":["Soles parada"],"package":"aplicacion.soles.loan.per.parada.c"},
+    {"name":"CajaInka","aliases":[],"domain":"cajainka.com"}
+  ]
+}

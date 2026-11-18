@@ -1,0 +1,7 @@
+.panel-sidebar>img{width:100%;height:auto;object-fit:contain;object-position:center;padding:0 16px 24px!important;box-sizing:border-box}
+/* Le bouton partage la largeur de l'avatar et de l'identité. */
+.sidebar-profile{grid-template-columns:38px minmax(0,1fr);position:relative;padding-bottom:54px;min-height:104px}
+.sidebar-profile button{position:absolute;bottom:4px;left:0;right:0;width:100%;min-height:36px;margin:0!important;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.internal-panel .demo-bottom .demo-chip{background:#fff3d9;color:#8a5d0c;border:1px solid #edd49a;font-weight:700;padding:4px 9px}
+.internal-panel .access-role{background:#edf4ff;color:#285f9b;border:1px solid #cedff6}
+.internal-panel .candidate-card .status-pill,.internal-panel .pattern-grid .status-pill{background:#fff3d9;color:#8a5d0c;border-color:#edd49a}

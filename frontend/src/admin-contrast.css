@@ -1,0 +1,28 @@
+/* Contraste de datos: marca en las series, superficies claras y estados puntuales. */
+.internal-panel .demo-dashboard>h1,.internal-panel .demo-dashboard>h1+p{display:none}
+.internal-panel .demo-dashboard .demo-metrics{margin-top:18px}
+.internal-panel .demo-metrics article{background:linear-gradient(115deg,rgba(255,255,255,.92),rgba(249,250,252,.4));border-color:#e0e5ec;box-shadow:0 4px 15px #182b4505;position:relative;overflow:hidden}
+.internal-panel .demo-metrics article:before{content:'';position:absolute;left:0;top:20px;bottom:20px;width:3px;background:#b11423;border-radius:3px}
+.internal-panel .demo-metrics article:nth-child(2):before{background:#38886d}
+.internal-panel .demo-metrics article:nth-child(3):before{background:#c88d31}
+.internal-panel .demo-metrics article:nth-child(4):before{background:#38886d}
+.internal-panel .demo-metrics article:nth-child(2) .demo-metric-icon,.internal-panel .demo-metrics article:nth-child(4) .demo-metric-icon{color:#38886d}
+.internal-panel .demo-metrics article:nth-child(3) .demo-metric-icon{color:#c88d31}
+.internal-panel .demo-metrics strong{color:#202c3d}
+.internal-panel .demo-charts svg path{fill:#fff3f4}
+.internal-panel .demo-charts svg polyline:first-of-type{stroke:#b11423;stroke-width:3}
+.internal-panel .demo-charts svg polyline:last-of-type{stroke:#db8490;stroke-width:2.5}
+.internal-panel .demo-legend{color:#b11423}
+.internal-panel .demo-legend span{color:#c9707f}
+.internal-panel .demo-donut{background:conic-gradient(#b11423 0 68.4%,#d98b96 68.4% 87%,#e5e9ef 87%)}
+.internal-panel .demo-charts article,.internal-panel .demo-bottom article,.internal-panel .demo-table{background:rgba(255,255,255,.78);border-color:#dce3eb;box-shadow:0 5px 24px #172e4d05}
+.internal-panel .demo-charts h2,.internal-panel .demo-bottom h2,.internal-panel .demo-table h2{color:#263346;font-weight:700}
+.internal-panel .demo-status>div:first-child{color:#a87320}
+.internal-panel .demo-status>div:nth-child(2){color:#287854}
+.internal-panel .demo-status>div:nth-child(3){color:#b11423}
+.internal-panel .demo-status b{color:#263346}
+.panel-module-header{background:linear-gradient(100deg,#fff 65%,#fafbfc)}
+.panel-module-header h1{color:#263346}
+.internal-panel .module-stats article:first-child{border-left:3px solid #b11423}
+.internal-panel .module-stats article:nth-child(2){border-left:3px solid #38886d}
+.internal-panel .module-stats article:nth-child(3){border-left:3px solid #c88d31}

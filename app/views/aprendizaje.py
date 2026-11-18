@@ -9,6 +9,7 @@ from sipan import config, guidance
 from sipan.novelty import find_patterns
 from sipan.persistence.database import DatabaseNotConfigured
 from sipan.services import LearningService
+from sipan.auth import AuthService, ROLE_ADMIN, ROLE_REVIEWER, ROLE_USER, require_role
 from ui_common import PAGES
 
 
@@ -22,6 +23,12 @@ def _labels_editor(report: dict) -> dict[str, int]:
     }
 
 
+try:
+    reviewer = require_role(ROLE_REVIEWER, ROLE_ADMIN)
+except PermissionError as exc:
+    st.error(str(exc))
+    st.stop()
+
 service = LearningService()
 try:
     reports = service.list_reports()
@@ -33,7 +40,8 @@ validated = [report for report in reports if report["status"] == "validado"]
 rejected = [report for report in reports if report["status"] == "rechazado"]
 
 with st.container(key="sa-page-content"):
-    theme.page_header("Aprendizaje continuo", "Panel local para revisar aportes consentidos y preparar datasets reproducibles.")
+    panel_title = "Panel de administración" if ROLE_ADMIN in reviewer["roles"] else "Panel de revisión humana"
+    theme.page_header(panel_title, "Revisa aportes consentidos y prepara datasets reproducibles con control humano.")
     first, second, third = st.columns(3)
     first.metric("Pendientes", len(pending))
     second.metric("Validados", len(validated))
@@ -60,10 +68,10 @@ with st.container(key="sa-page-content"):
         action_col, duplicate_col = st.columns(2)
         with action_col:
             if st.button("Validar etiquetas", type="primary", key=f"validate-{selected['id']}"):
-                service.reports.review(selected["id"], "validado", labels, note)
+                service.reports.review(selected["id"], "validado", labels, note, reviewer["id"])
                 st.rerun()
             if st.button("Rechazar o dejar insuficiente", key=f"reject-{selected['id']}"):
-                service.reports.review(selected["id"], "rechazado", labels, note or "Información insuficiente o aporte irrelevante.")
+                service.reports.review(selected["id"], "rechazado", labels, note or "Información insuficiente o aporte irrelevante.", reviewer["id"])
                 st.rerun()
         with duplicate_col:
             candidates = [report["id"] for report in reports if report["id"] != selected["id"]]
@@ -80,6 +88,18 @@ with st.container(key="sa-page-content"):
         manifest = service.create_dataset_version()
         st.success(f"Versión {manifest['version']} creada con {manifest['eligible_reports']} aportes validados.")
         st.json(manifest)
+
+    if ROLE_ADMIN in reviewer["roles"]:
+        theme.section_title("Administración de cuentas")
+        users = AuthService().users()
+        accounts = {f"{account['email']} · {', '.join(account['roles'])}": account for account in users}
+        if accounts:
+            selected_account = accounts[st.selectbox("Cuenta", list(accounts), key="role-account")]
+            role = st.selectbox("Agregar rol", [ROLE_USER, ROLE_REVIEWER, ROLE_ADMIN], key="role-name")
+            if st.button("Asignar rol", key="grant-role"):
+                AuthService().grant_role(selected_account["email"], role)
+                st.success("Rol asignado.")
+                st.rerun()
 
     with st.expander("Eliminar un aporte mediante su código"):
         report_id = st.text_input("ID del aporte", key="delete-report-id")

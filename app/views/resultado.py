@@ -4,6 +4,7 @@ import theme
 from sipan import config, guidance
 from sipan.persistence.database import DatabaseNotConfigured
 from sipan.services import ReportService
+from sipan.auth import current_user
 from ui_common import PAGES, clear_analysis, get_result
 
 IDENTIFIER_NAMES = {
@@ -44,27 +45,35 @@ with st.container(key="sa-page-content"):
         theme.section_title("Podría haber, revisa con cuidado")
         st.html("".join(theme.signal_card(s, possible=True) for s in result.possible_signals))
 
-    theme.section_title("¿Quieres aportar este mensaje para mejorar el sistema?")
-    st.caption("Solo se guarda si das tu consentimiento. Revisa y elimina nombres u otros datos personales antes de compartirlo.")
+    theme.section_title("¿Quieres reportar esta oferta a SipánAlert?")
+    st.info(
+        "Este reporte será revisado por una persona. No es una denuncia oficial ni confirma que exista fraude.",
+        icon=":material/info:",
+    )
+    st.caption("Solo se guarda si das tu consentimiento. Revisa y elimina nombres u otros datos personales antes de enviarlo.")
     share_text = st.text_area(
         "Texto anonimizado que compartirás", value=result.analyzed_text, max_chars=config.MAX_TEXT_LENGTH,
         key="voluntary_report_text",
     )
+    user = current_user()
     consent = st.checkbox(
         "Autorizo guardar este texto anonimizado para revisión humana y mejora futura del sistema.",
         key="voluntary_report_consent",
     )
-    if st.button("Compartir para revisión", icon=":material/volunteer_activism:", disabled=not consent):
+    if not user:
+        st.info("Inicia sesión o crea una cuenta para reportar esta oferta y consultar su historial.")
+        st.page_link(PAGES["cuenta"], label="Ir a Cuenta", icon=":material/person:")
+    if st.button("Reportar para revisión", icon=":material/flag:", disabled=not consent or user is None):
         probabilities = {signal.label: signal.probability for signal in result.signals + result.possible_signals
                          if signal.probability is not None}
         try:
             report_id, deletion_code, duplicate_of = ReportService().submit(
-                share_text, probabilities, result.model_version,
+                share_text, probabilities, result.model_version, user["id"],
             )
         except (ValueError, DatabaseNotConfigured) as exc:
             st.error(str(exc))
         else:
-            st.success("Recibimos el aporte para revisión humana.")
+            st.success("Recibimos el reporte para revisión humana.")
             st.code(f"ID del aporte: {report_id}\nCódigo de eliminación: {deletion_code}", language=None)
             st.warning("Guarda el código de eliminación. SipánAlert no podrá mostrarlo otra vez.")
             if duplicate_of:

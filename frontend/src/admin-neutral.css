@@ -1,0 +1,41 @@
+/* SipánAlert: panel blanco, superficies de vidrio y un único acento de marca. */
+.internal-panel { --admin-ink:#27303f; --admin-muted:#697383; --admin-line:#e6e9ed; --admin-accent:#ac1420; background:#fff; color:var(--admin-ink); font-family:Arial,sans-serif; }
+.internal-panel #panel-content,.panel-module-header,.module-body { background:#fff; }
+.panel-sidebar { background:#fff; color:var(--admin-ink); border-right:1px solid var(--admin-line); }
+.panel-sidebar>img { background:#a20c17; padding:12px; border-radius:8px; width:156px; }
+.panel-sidebar nav button,.panel-sidebar>button { color:#5f6978; background:transparent; border:1px solid transparent; font-weight:500; }
+.panel-sidebar nav button:hover { background:#f6f7f9; color:#27303f; }
+.panel-sidebar nav .module-active { color:var(--admin-accent); background:rgba(241,243,246,.65); border:1px solid rgba(221,226,233,.8); box-shadow:inset 2px 0 var(--admin-accent); backdrop-filter:blur(12px); }
+.panel-sidebar svg { color:inherit; }
+.sidebar-profile { border-top:1px solid var(--admin-line); }
+.profile-initials { background:#f0f2f5; color:#374151; border:1px solid #e0e4e9; }
+.sidebar-profile small { color:#7a8390; }
+.sidebar-profile button { display:block; width:100%; min-height:38px; margin-top:12px; padding:8px 12px!important; color:#a31420!important; background:#fff!important; border:1px solid #dedfe5!important; border-radius:8px; text-decoration:none; font-size:12px; font-weight:600; text-align:center; cursor:pointer; }
+.sidebar-profile button:hover { background:#fff4f4!important; border-color:#cfa6ab!important; }
+.panel-module-header h1,.internal-panel h1 { color:#252e3c; font-size:24px; letter-spacing:-.025em; }
+.panel-module-header p { color:var(--admin-muted); }
+.panel-account svg { color:#596373; }
+.panel-account-menu { border:1px solid var(--admin-line); background:rgba(255,255,255,.88); backdrop-filter:blur(20px); box-shadow:0 10px 30px #1826380c; }
+.internal-panel .module-card,.internal-panel .demo-charts article,.internal-panel .demo-bottom article,.internal-panel .demo-table { background:rgba(255,255,255,.78); border:1px solid rgba(218,224,231,.85); backdrop-filter:blur(18px); box-shadow:0 3px 16px rgba(30,45,65,.025),inset 0 1px 0 #fff; }
+.internal-panel .module-stats article,.internal-panel .demo-metrics article { background:rgba(247,249,251,.55); color:#344054; border:1px solid #e6e9ed; box-shadow:inset 0 1px #fff; }
+.internal-panel .module-stats strong,.internal-panel .demo-metrics strong { color:#27303f; font-size:26px; }
+.internal-panel .module-stats svg,.demo-metric-icon { color:#778190; }
+.internal-panel .demo-metrics small,.internal-panel .demo-legend { color:#788190; }
+.internal-panel .demo-legend span { color:#a5acb6; }
+.demo-charts svg path { fill:#f2f4f7; }
+.demo-charts svg polyline:first-of-type { stroke:#59677b; }
+.demo-charts svg polyline:last-of-type { stroke:#b3bcc8; }
+.demo-donut { background:conic-gradient(#59677b 0 68.4%,#9da9b8 68.4% 87%,#e4e8ee 87%); }
+.demo-chip,.internal-panel .status-pill { background:#f1f3f6; color:#5e6877; border:1px solid #e1e6ec; }
+.module-demo,.demo-banner { background:rgba(247,249,251,.65); color:#737d8b; border:1px solid #e8ebef; }
+.queue-message.active { background:#f6f8fa; border-color:#c7d0dc; box-shadow:inset 2px 0 #758398; }
+.queue-message svg { color:#788392; }
+.queue-tabs .active { color:#354152; background:white; box-shadow:0 1px 4px #15263a0a; }
+.candidate-card,.candidate-card hr { border-color:#e5e9ef; }
+.candidate-card h3,.candidate-card aside { background:#f5f7f9; color:#4c5869; }
+.candidate-card svg,.pattern-grid svg { color:#788598; }
+.internal-panel .primary { background:#ac1420; border:1px solid #ac1420; box-shadow:none; }
+.internal-panel .secondary { background:#fff; color:#4b5563; border:1px solid #d8dfe7; }
+.internal-panel button { transition:background-color .15s ease,border-color .15s ease; }
+.internal-panel button:focus-visible,.internal-panel a:focus-visible { outline:2px solid #9daabd; outline-offset:3px; }
+@media(prefers-reduced-motion:reduce) { .internal-panel button { transition:none; } }

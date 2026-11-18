@@ -23,3 +23,8 @@ data/private/
 .env
 .env.*
 !.env.example
+
+# Frontend: dependencias y compilación local
+node_modules/
+frontend/dist/
+.taste-skill/
