@@ -3,6 +3,7 @@
   "title": "SBS advierte sobre aplicativos que ofrecen préstamos de dinero",
   "published_at": "2026-03-03",
   "reviewed_at": "2026-11-18",
+  "evidence_context": "El comunicado advierte sobre aplicaciones de préstamo que solicitan acceso a contactos, fotos y videos. También describe cobros elevados y amenazas de divulgar información personal durante la cobranza.",
   "scope": "Aplicativos identificados en un comunicado preventivo de la SBS. No equivale a una sentencia judicial ni prueba la identidad de un remitente.",
   "entities": [
     {"name":"Monedaya pro- Préstamo seguro","aliases":["Monedaya pro"],"package":"com.monedayapro.android.app"},
