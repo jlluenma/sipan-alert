@@ -15,7 +15,7 @@ class GuidedReply:
     choices: tuple[str, ...]
 
 
-MODEL = "gemini-2.5-flash-lite"
+MODEL = "gemini-flash-lite-latest"
 INSTRUCTIONS = "\n".join([
     "Eres el asistente de SIPAN Alert. Responde en español, con pasos concretos y breves.",
     "Limítate a prevención y orientación sobre ofertas de préstamos en Perú. "
@@ -37,14 +37,13 @@ def generate_answer(question: str, api_key: str) -> GuidedReply | None:
     payload = {
         "systemInstruction": {"parts": [{"text": INSTRUCTIONS}]},
         "contents": [{"role": "user", "parts": [{"text": anonymize(question).text}]}],
-        "generationConfig": {"maxOutputTokens": 650,
-            "thinkingConfig": {"thinkingBudget": 0},
+        "generationConfig": {"maxOutputTokens": 1536,
             "responseMimeType": "application/json",
-            "responseSchema": {
-                "type": "OBJECT",
+            "responseJsonSchema": {
+                "type": "object",
                 "properties": {
-                    "message": {"type": "STRING"},
-                    "choices": {"type": "ARRAY", "items": {"type": "STRING"}, "maxItems": 3},
+                    "message": {"type": "string"},
+                    "choices": {"type": "array", "items": {"type": "string"}, "maxItems": 3},
                 },
                 "required": ["message", "choices"],
             },},
