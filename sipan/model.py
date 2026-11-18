@@ -6,12 +6,10 @@ import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
-import joblib
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.pipeline import FeatureUnion, Pipeline
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sklearn.pipeline import Pipeline
 
 from sipan import config
 from sipan.preprocessing import normalize_for_model
@@ -23,6 +21,11 @@ class ModelUnavailable(RuntimeError):
 
 def build_pipeline() -> Pipeline:
     """TF-IDF de palabras (explicable) + n-gramas de caracteres (tolera errores de tipeo)."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.multiclass import OneVsRestClassifier
+    from sklearn.pipeline import FeatureUnion, Pipeline
+
     return Pipeline([
         ("features", FeatureUnion([
             ("word", TfidfVectorizer(
@@ -94,8 +97,10 @@ class SignalModel:
 
     def top_terms(self, text: str, label: str, k: int = 5) -> list[str]:
         """Términos (palabras o bigramas) del texto que más empujan la predicción de `label`."""
+        import numpy as np
+
         features = self.pipeline.named_steps["features"]
-        word_vec: TfidfVectorizer = features.transformer_list[0][1]
+        word_vec = features.transformer_list[0][1]
         estimator = self.pipeline.named_steps["clf"].estimators_[self.labels.index(label)]
         if not hasattr(estimator, "coef_"):  # etiqueta constante en entrenamiento
             return []
@@ -126,7 +131,12 @@ def load_model(path: Path = config.MODEL_PATH) -> SignalModel:
     if sha256_of(path) != expected:
         raise ModelUnavailable("El archivo del modelo no coincide con su huella registrada.")
 
-    artifact = joblib.load(path)
+    try:
+        import joblib
+
+        artifact = joblib.load(path)
+    except (ImportError, OSError) as exc:
+        raise ModelUnavailable("No se pudieron cargar las dependencias del modelo.") from exc
     return SignalModel(
         pipeline=artifact["pipeline"],
         labels=tuple(artifact["labels"]),

@@ -27,8 +27,9 @@ navigation = st.navigation(
         st.Page(PAGES["resultado"], title="Resultado", visibility="hidden"),
         st.Page(PAGES["orientacion"], title="Qué hacer", icon=":material/support:"),
         st.Page(PAGES["aprendizaje"], title="Aprendizaje continuo", icon=":material/psychology:"),
+        st.Page(PAGES["faq"], title="Asistente", icon=":material/chat:"),
     ],
     position="hidden",
 )
-theme.navbar(PAGES["inicio"], PAGES["orientacion"], is_home=navigation.url_path == "")
+theme.navbar(PAGES["inicio"], PAGES["orientacion"], is_home=navigation.url_path == "", faq_path=PAGES["faq"])
 navigation.run()

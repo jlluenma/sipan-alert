@@ -172,9 +172,9 @@ Después abre un PR hacia `main` en GitHub. Cuando se mergea, la rama se borra s
 - La telemetría de Streamlit está desactivada (`.streamlit/config.toml`).
 - El modelo se carga solo si su huella SHA-256 coincide con la registrada al entrenar. Nunca cargues archivos `.joblib` de origen desconocido.
 
-## Aprendizaje continuo, piloto local
+## Aprendizaje continuo y PostgreSQL
 
-El análisis ordinario sigue procesando el texto en memoria. Desde el resultado, una persona puede decidir compartir una copia anonimizada para revisión. El sistema almacena ese aporte en `data/private/continual_learning.sqlite3`, una ruta ignorada por Git.
+El análisis ordinario sigue procesando el texto en memoria. Desde el resultado, una persona puede decidir compartir una copia anonimizada para revisión. Los aportes consentidos se almacenan en PostgreSQL mediante SQLAlchemy.
 
 1. Analiza un mensaje y selecciona **Compartir para revisión** después de revisar la copia anonimizada y aceptar el consentimiento.
 2. Guarda el ID y el código de eliminación que muestra la aplicación. El código sirve para borrar el contenido del aporte desde **Aprendizaje continuo**.
@@ -199,7 +199,7 @@ Revisa y aplica la migración inicial antes de ejecutar la aplicación con persi
 alembic upgrade head
 ```
 
-Las revisiones de esquema posteriores se generan con `alembic revision --autogenerate -m "descripcion"` y se revisan antes de aplicar `alembic upgrade head`.
+Las revisiones de esquema posteriores se generan con `alembic revision --autogenerate -m "descripcion"` y se revisan antes de aplicar `alembic upgrade head`. No guardes credenciales en Git.
 
 ## Fuera del Sprint 1
 
