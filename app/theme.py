@@ -534,6 +534,12 @@ def verdict(result: AnalysisResult) -> str:
         return (f'<section class="sa-verdict sa-verdict--alert" role="status">{icon("warning")}<div>'
                 f'<h2>Encontramos {count} {noun}</h2>'
                 f'<p>Revisa lo marcado antes de pagar o dar tus datos.</p></div></section>')
+    possible_count = len(result.possible_signals)
+    if possible_count:
+        noun = "posible señal de alerta" if possible_count == 1 else "posibles señales de alerta"
+        return (f'<section class="sa-verdict sa-verdict--alert" role="status">{icon("warning")}<div>'
+                f'<h2>Encontramos {possible_count} {noun}</h2>'
+                f'<p>El texto necesita una revisión cuidadosa antes de pagar o compartir datos.</p></div></section>')
     return (f'<section class="sa-verdict sa-verdict--clear" role="status">{icon("info")}<div>'
             f'<h2>No encontramos señales de alerta</h2>'
             f'<p>Eso no garantiza que la oferta sea segura: solo revisamos el texto.</p></div></section>')

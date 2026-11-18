@@ -26,6 +26,7 @@ navigation = st.navigation(
         st.Page(PAGES["analizar"], title="Revisar mensaje", icon=":material/search:"),
         st.Page(PAGES["resultado"], title="Resultado", visibility="hidden"),
         st.Page(PAGES["orientacion"], title="Qué hacer", icon=":material/support:"),
+        st.Page(PAGES["aprendizaje"], title="Aprendizaje continuo", icon=":material/psychology:"),
     ],
     position="hidden",
 )

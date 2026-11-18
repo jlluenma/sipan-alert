@@ -48,6 +48,17 @@ def load_dataset(path: Path) -> pd.DataFrame:
     missing = {"mensaje", "grupo_similitud", "revision", *config.LABELS} - set(df.columns)
     if missing:
         raise ValueError(f"Faltan columnas en el dataset: {sorted(missing)}")
+    # El corpus sintético v1 conserva su estado histórico. Los aportes voluntarios
+    # requieren validación explícita antes de ser elegibles para entrenamiento.
+    voluntary = df["fuente"] == config.VOLUNTARY_SOURCE
+    invalid_voluntary = voluntary & (df["revision"] != "revisada")
+    if invalid_voluntary.any():
+        raise ValueError(
+            "El dataset contiene aportes voluntarios pendientes o rechazados. "
+            "Exporta únicamente ejemplos validados desde el panel de aprendizaje."
+        )
+    if voluntary.any() and "particion" in df and (df.loc[voluntary, "particion"] != "entrenamiento").any():
+        raise ValueError("El entrenamiento solo admite la partición de entrenamiento del dataset evolutivo.")
     return df[df["revision"] != "descartada"].reset_index(drop=True)
 
 

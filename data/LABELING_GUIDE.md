@@ -92,3 +92,7 @@ Reemplazar cualquier identificador por su marcador:
 
 - `grupo_similitud` es la **familia de redacción** (F1–F5): cada familia usa frases distintas. La evaluación entrena con 4 familias y prueba con la quinta, así se mide si el modelo generaliza a redacciones que nunca vio.
 - Las métricas sobre este corpus **no representan** el desempeño con mensajes reales de Chiclayo.
+
+## Aportes voluntarios del piloto continuo
+
+Los aportes procedentes de la aplicación se guardan como `voluntario_anonimizado` solo tras consentimiento. Su ciclo es `pendiente` → `validado` o `rechazado`. Los casos marcados como duplicados se conservan para trazabilidad y no se exportan. Una versión del dataset incluye exclusivamente casos validados y asigna cada grupo de mensajes similares a una sola partición, `entrenamiento` o `evaluacion`.

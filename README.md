@@ -172,6 +172,35 @@ Después abre un PR hacia `main` en GitHub. Cuando se mergea, la rama se borra s
 - La telemetría de Streamlit está desactivada (`.streamlit/config.toml`).
 - El modelo se carga solo si su huella SHA-256 coincide con la registrada al entrenar. Nunca cargues archivos `.joblib` de origen desconocido.
 
+## Aprendizaje continuo, piloto local
+
+El análisis ordinario sigue procesando el texto en memoria. Desde el resultado, una persona puede decidir compartir una copia anonimizada para revisión. El sistema almacena ese aporte en `data/private/continual_learning.sqlite3`, una ruta ignorada por Git.
+
+1. Analiza un mensaje y selecciona **Compartir para revisión** después de revisar la copia anonimizada y aceptar el consentimiento.
+2. Guarda el ID y el código de eliminación que muestra la aplicación. El código sirve para borrar el contenido del aporte desde **Aprendizaje continuo**.
+3. Abre la página **Aprendizaje continuo** dentro de la aplicación. La bandeja muestra aportes pendientes y los grupos de mensajes similares como posibles patrones emergentes.
+4. Valida, corrige o rechaza cada aporte. Una agrupación solo prioriza la revisión y nunca confirma una modalidad de fraude.
+5. Crea una versión del dataset. Solo incorpora aportes validados sin duplicados, conserva su procedencia y separa los grupos similares entre `entrenamiento.csv` y `evaluacion.csv`.
+
+El entrenamiento automático no forma parte de este piloto. `scripts/train.py` rechaza aportes voluntarios pendientes o rechazados y también rechaza la partición de evaluación. La futura autenticación, el historial de cuentas y los permisos del panel se integrarán sobre estos módulos por el responsable de esa funcionalidad.
+
+## PostgreSQL y migraciones
+
+Configura las conexiones fuera del repositorio mediante `.env` o variables del sistema.
+
+```env
+DATABASE_URL=postgresql+psycopg://USUARIO:CONTRASENA@localhost:5432/sipanalert_db
+DATABASE_MIGRATION_URL=postgresql+psycopg://USUARIO:CONTRASENA@localhost:5432/sipanalert_db
+```
+
+Revisa y aplica la migración inicial antes de ejecutar la aplicación con persistencia:
+
+```bash
+alembic upgrade head
+```
+
+Las revisiones de esquema posteriores se generan con `alembic revision --autogenerate -m "descripcion"` y se revisan antes de aplicar `alembic upgrade head`.
+
 ## Fuera del Sprint 1
 
 - **Sprint 2:** calculadora de pagos (US-06), más fuentes oficiales (US-07) y ejemplos didácticos (US-12).
