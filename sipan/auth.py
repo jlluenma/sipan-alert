@@ -1,17 +1,21 @@
-"""Autenticación y roles para la interfaz Streamlit."""
+"""Autenticación, roles y hashing de contraseñas.
+
+Módulo puro: no depende de ninguna interfaz (Streamlit, FastAPI, CLI).
+La gestión de sesión de usuario vive en cada capa de UI:
+- FastAPI firma cookies en `api/main.py` con `SIPAN_SESSION_SECRET`.
+- Scripts de administración (`scripts/create_admin.py`, `scripts/grant_role.py`)
+  usan `AuthService` directamente.
+"""
 from __future__ import annotations
 
 import base64
 import hashlib
 import secrets
 
-import streamlit as st
-
 from sipan.persistence.database import session_scope
 from sipan.persistence.models import User
 from sipan.persistence.repositories import UserRepository
 
-SESSION_USER_KEY = "authenticated_user"
 ROLE_USER = "usuario"
 ROLE_REVIEWER = "revisor"
 ROLE_ADMIN = "administrador"
@@ -81,22 +85,3 @@ class AuthService:
     def users(self) -> list[dict]:
         with session_scope() as session:
             return [_public_user(user) for user in UserRepository(session).find_all()]
-
-
-def current_user() -> dict | None:
-    return st.session_state.get(SESSION_USER_KEY)
-
-
-def sign_in(user: dict) -> None:
-    st.session_state[SESSION_USER_KEY] = user
-
-
-def sign_out() -> None:
-    st.session_state.pop(SESSION_USER_KEY, None)
-
-
-def require_role(*roles: str) -> dict:
-    user = current_user()
-    if user is None or not set(user["roles"]).intersection(roles):
-        raise PermissionError("Inicia sesión con una cuenta autorizada para acceder a este panel.")
-    return user

@@ -16,7 +16,6 @@ data/private/
 .env
 .vscode/
 .idea/
-.streamlit/secrets.toml
 *.log
 
 # Variables de entorno y credenciales
