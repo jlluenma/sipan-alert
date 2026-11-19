@@ -4,7 +4,7 @@ Prototipo web basado en Machine Learning que identifica **señales de riesgo** e
 
 > SipánAlert IA **no** determina que una oferta sea fraude ni certifica que un prestamista sea legítimo. Sus resultados son orientativos.
 
-Proyecto del curso Innovación y Transformación Digital, UTP Chiclayo, 2026. **Versión: Sprint 1 (US-01 a US-05) + fase de integración T-3.**
+Proyecto del curso Innovación y Transformación Digital, UTP Chiclayo, 2026. **Versión: Sprint 1 (US-01 a US-05) + fase de integración T-3 + consolidación pre-APF3 (PR #8 y PR #9).**
 
 ## Qué hace (Sprint 1)
 
@@ -17,6 +17,17 @@ Proyecto del curso Innovación y Transformación Digital, UTP Chiclayo, 2026. **
 | US-05: Privacidad | El análisis público no persiste texto. Teléfonos, DNI, correos, enlaces y cuentas se ocultan antes de analizar. El envío de reportes para revisión requiere login y consentimiento explícito. |
 
 **Señales (Anexo A, APF1):** `pago_anticipado`, `acceso_invasivo`, `amenaza_presion` y `condiciones_opacas`. Los criterios de cada una están en [`data/LABELING_GUIDE.md`](data/LABELING_GUIDE.md).
+
+## Extensiones integradas (post-Sprint 1)
+
+| Capacidad | Dónde se usa |
+|---|---|
+| Entrada por foto (OCR cliente) y por voz | Analizador principal; el OCR corre con tesseract.js en el navegador y nunca sube la imagen. |
+| Comparación con reportes validados | Vista de resultado: señala similitud con reportes revisados sin exponer su texto crudo. |
+| Investigación de entidad | Vista `Investigar entidad` (`/`): consulta un catálogo local de aplicaciones, empresas y dominios reportados. Con sesión iniciada incluye noticias vía Gemini (envía solo el nombre anonimizado). |
+| PDF del resultado | Botón «Descargar PDF» en la vista de resultado; el PDF se genera 100 % en el navegador con jsPDF. |
+| Notificaciones del usuario | Campana en la barra: avisa al autor cuando un reporte o publicación suya se valida o rechaza. |
+| Fotos en comunidad | Las publicaciones aprobadas pueden llevar imágenes; se normalizan en el servidor (EXIF stripping, re-encoding, límite 5 MB). |
 
 ## Qué es real y qué es simulado
 
@@ -90,25 +101,31 @@ sipan/                     Núcleo (agnóstico a la UI; sin imports de Streamlit
   preprocessing.py         Validación, anonimización y normalización para el modelo
   rules.py                 Reglas documentadas (baseline y explicación)
   model.py                 Pipeline TF-IDF + LogReg, carga con verificación SHA-256 y términos influyentes
-  analyzer.py              analyze(texto) -> AnalysisResult (ML + reglas + avisos)
+  analyzer.py              analyze(texto) -> AnalysisResult (ML + reglas + avisos + similitud)
   guidance.py              Textos de orientación, fuentes oficiales y contactos
   auth.py                  AuthService (scrypt + roles usuario/revisor/administrador)
   database.py              SQLAlchemy engine lru-cached con DATABASE_URL
   persistence/             Modelos ORM y repositorios
   services.py              ReportService, LearningService, AccountService
-  faq.py / gemini_faq.py   Chatbot preventivo con fallback a catálogo local
+  faq.py / gemini_faq.py   Chatbot preventivo con fallback a catálogo local (texto anonimizado antes de enviar)
+  entity_investigation.py  Catálogo local de entidades reportadas (apps, empresas, dominios)
+  web_verification.py      Verificación de contexto público con Gemini (anonimiza antes de enviar)
   novelty.py               Detección de agrupaciones emergentes
   dataset_versions.py      Composición de DatasetVersion a partir de reports validados
 api/
   main.py                  FastAPI en puerto 8015, sesión cookie firmada
-  community.py             Feed moderado (auditoría técnica pendiente en T-3.11)
+  community.py             Feed moderado con fotos (EXIF stripping, auditoría T-3.11 pendiente)
 frontend/                  React + Vite (UI oficial desde 2026-11-18)
-  src/App.jsx              App pública (análisis, resultado, FAQ, cuenta)
+  src/App.jsx              App pública (análisis, resultado, comunidad, investigación, cuenta)
   src/PanelApp.jsx         Panel de revisor y administrador en /panel
-migrations/                Alembic
+  src/EntityInvestigation.jsx  Vista de investigación de entidad
+  src/UserNotifications.jsx    Campana de notificaciones del autor
+  src/ResultActions.jsx + resultPdf.js  Acciones del resultado y PDF cliente
+migrations/                Alembic (head `20261118_06`: incluye community_post_photos)
 data/
   LABELING_GUIDE.md        Manual de etiquetado (SECI: externalización)
   dataset_v1.csv           Corpus sintético versionado
+  sbs_alerts*.json         Alertas oficiales consultables
 fixtures/
   demo.dump                pg_dump para seed local (ver scripts/seed_demo.py)
 scripts/
@@ -117,9 +134,9 @@ scripts/
   train_candidate.py       Entrenamiento de modelo candidato sobre reports validados
   create_admin.py          Crea una cuenta administradora
   grant_role.py            Agrega un rol a una cuenta existente
-  seed_demo.py             Restaura fixtures/demo.dump en Postgres local
+  seed_demo.py             Restaura fixtures/demo.dump, aplica alembic upgrade y resetea passwords
 reports/                   Métricas versionadas (evidencia del sprint)
-tests/                     pytest: entrada, anonimización, reglas, dataset, modelo, analizador y privacidad
+tests/                     pytest 93: entrada, anonimización, reglas, dataset, modelo, analizador, privacidad y continual learning
 ```
 
 ## Cómo funciona el análisis
@@ -159,7 +176,7 @@ tests/                     pytest: entrada, anonimización, reglas, dataset, mod
 - **Corpus sintético:** las métricas no representan el desempeño con mensajes reales, y el ML (F1 macro 0,68) no supera a las reglas (0,94).
 - **Sesgo del corpus:** la apertura «sin aval y sin Infocorp» aparece en mensajes limpios y de riesgo, así que el modelo aprendió que es neutral (una **correlación espuria**).
 - **Ofertas que quitan los controles normales de un préstamo** («te regalamos plata», «sin revisión en Infocorp, sin garantías», tasas irrealmente bajas) hoy no se detectan.
-- **Auditoría técnica de `api/community.py` pendiente** (T-3.11): revisar inyección SQL, anonimización de títulos/comentarios y privacidad del feed público.
+- **Auditoría técnica de `api/community.py` pendiente** (T-3.11): aun con el endpoint de fotos usando SQL parametrizado, queda la revisión formal del feed y de los filtros antes de publicar la comunidad.
 
 Estas limitaciones están documentadas con su diagnóstico y una propuesta de corrección para un sprint posterior.
 
