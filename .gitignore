@@ -22,6 +22,11 @@ data/private/
 .env
 .env.*
 !.env.example
+# Certificados corporativos (p. ej. cadena Fortinet para npm/pip tras proxy)
+*.pem
+*.crt
+*.key
+*.p12
 
 # Frontend: dependencias y compilación local
 node_modules/
