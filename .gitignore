@@ -16,15 +16,27 @@ data/private/
 .env
 .vscode/
 .idea/
-.streamlit/secrets.toml
 *.log
 
 # Variables de entorno y credenciales
 .env
 .env.*
 !.env.example
+# Certificados corporativos (p. ej. cadena Fortinet para npm/pip tras proxy)
+*.pem
+*.crt
+*.key
+*.p12
 
 # Frontend: dependencias y compilación local
 node_modules/
 frontend/dist/
 .taste-skill/
+
+# Documentacion local de agentes (no versionada)
+CLAUDE.md
+AGENTS.md
+BITACORA.md
+INDICE.md
+*.agent.md
+.agents/
