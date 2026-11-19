@@ -3,14 +3,47 @@
 from __future__ import annotations
 
 import hashlib
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Any
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+from sipan import config
 from sipan.preprocessing import normalize_for_model
+
+
+def compare_reviewed_reports(message: str, reports: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compara con aportes revisados y devuelve únicamente datos agregados."""
+    candidates = [
+        report for report in reports
+        if report.get("status") == "validado" and report.get("content")
+        and report.get("source") == config.VOLUNTARY_SOURCE
+        and not report.get("duplicate_of")
+    ]
+    vectorizer = TfidfVectorizer(
+        preprocessor=normalize_for_model,
+        ngram_range=(1, 2),
+    )
+    if not candidates or not normalize_for_model(message):
+        return {"count": 0, "labels": []}
+    corpus = [normalize_for_model(report["content"]) for report in candidates]
+    if not any(len(word) >= 2 for document in corpus for word in document.split()):
+        return {"count": 0, "labels": []}
+    matrix = vectorizer.fit_transform([report["content"] for report in candidates])
+    scores = cosine_similarity(vectorizer.transform([message]), matrix)[0]
+    matches = [report for report, score in zip(candidates, scores) if score >= 0.48]
+    if len(matches) < 3:
+        return {"count": 0, "labels": []}
+    frequencies = Counter(
+        label for report in matches
+        for label, value in (report.get("labels") or {}).items()
+        if label in config.LABELS and value == 1
+    )
+    return {"count": len(matches), "labels": [
+        label for label, count in frequencies.most_common() if count >= 2
+    ]}
 
 
 def find_patterns(reports: list[dict[str, Any]], similarity_threshold: float = 0.35) -> list[dict[str, Any]]:

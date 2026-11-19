@@ -1,0 +1,109 @@
+.community-attachments {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e7e9ee;
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.community-attachments__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.community-attachments__toolbar input[hidden] {
+  display: none;
+}
+
+.community-compose .community-attachments__picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 7px 11px;
+  border: 1px solid #edc3c3;
+  border-radius: 8px;
+  background: #fff;
+  color: #a8181e;
+  font-size: .875rem;
+  font-weight: 650;
+}
+
+.community-attachments__picker .sa-icon {
+  font-size: 20px;
+}
+
+.community-attachments__picker:hover:enabled {
+  background: #fff1f1;
+}
+
+.community-attachments__picker:disabled {
+  opacity: .55;
+  cursor: default;
+}
+
+.community-attachments small:not(.error) {
+  color: #475467;
+}
+
+.community-attachments ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.community-attachments li {
+  position: relative;
+}
+
+.community-attachments li img {
+  display: block;
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.community-attachments__remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  background: #202938;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.community-attachments__remove:hover:enabled {
+  background: #a8181e;
+}
+
+.community-post-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.community-post-photos img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  background: #f6f7f9;
+}

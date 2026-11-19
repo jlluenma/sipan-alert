@@ -2,19 +2,21 @@
 from __future__ import annotations
 
 import os
+import logging
 from typing import Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from starlette.middleware.sessions import SessionMiddleware
+from sqlalchemy.exc import SQLAlchemyError
 
 from sipan.analyzer import AnalysisResult, Signal, analyze
 from sipan.auth import AuthService, ROLE_ADMIN, ROLE_REVIEWER
 from sipan.faq import FOLLOW_UPS, TOPICS, answer, matching_topic
 from sipan.gemini_faq import generate_answer
 from sipan.guidance import LABEL_INFO, SOURCES
-from sipan.novelty import find_patterns
+from sipan.novelty import compare_reviewed_reports, find_patterns
 from sipan.persistence.database import DatabaseNotConfigured
 from sipan.preprocessing import InputError
 from sipan.services import AccountService, LearningService, ReportService
@@ -176,6 +178,12 @@ def analyze_offer(payload: AnalysisInput, _: dict = Depends(current_user)) -> di
         from sipan.verification import verification_checks
         result = _analysis(analyze(payload.text))
         result['verification'] = verification_checks(payload.text)
+        try:
+            reports = LearningService().list_reports("validado")
+            result["similarReports"] = compare_reviewed_reports(result["analyzedText"], reports)
+        except (DatabaseNotConfigured, SQLAlchemyError):
+            logging.getLogger(__name__).warning("No se pudo consultar la similitud con reportes revisados.")
+            result["similarReports"] = None
         return result
     except InputError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -185,6 +193,22 @@ def analyze_offer(payload: AnalysisInput, _: dict = Depends(current_user)) -> di
 def verification_search(payload: AnalysisInput, _:dict=Depends(current_user)):
     from sipan.web_verification import search_official_sources
     return search_official_sources(payload.text)
+
+
+class EntityQuery(BaseModel):
+    query: str = Field(min_length=3, max_length=120)
+
+
+@app.post('/api/investigation')
+def investigation(payload: EntityQuery):
+    from sipan.entity_investigation import investigate_entity
+    return {"entities": investigate_entity(payload.query)}
+
+
+@app.post('/api/investigation/news')
+def investigation_news(payload: EntityQuery, _: dict = Depends(current_user)):
+    from sipan.web_verification import search_official_sources
+    return search_official_sources(payload.query, entity_news=True)
 
 
 @app.post("/api/chat")

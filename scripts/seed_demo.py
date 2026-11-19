@@ -29,11 +29,12 @@ from sipan.auth import _hash_password  # noqa: E402
 from sipan.persistence.database import get_session_factory, session_scope  # noqa: E402
 
 DEMO_PASSWORD = "sipan_demo_2026"
-DEMO_EMAILS = (
-    "admin.demo@sipanalert.local",
-    "revisor.demo@sipanalert.local",
-    "usuario.demo@sipanalert.local",
+DEMO_USERS = (
+    ("admin.demo@sipanalert.local", "Admin Demo"),
+    ("revisor.demo@sipanalert.local", "Revisor Demo"),
+    ("usuario.demo@sipanalert.local", "Usuario Demo"),
 )
+DEMO_EMAILS = tuple(email for email, _ in DEMO_USERS)
 
 
 def _parse_url(url: str) -> dict[str, str]:
@@ -94,18 +95,30 @@ def main() -> int:
         return result.returncode
     print(f"Dump restaurado desde {dump_path}.")
 
-    # 3) Fijar contrasenas conocidas para los tres usuarios demo.
+    # 3) Aplicar migraciones pendientes (el dump puede quedar por detras del head).
+    get_session_factory.cache_clear()
+    upgrade = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+    )
+    if upgrade.returncode != 0:
+        print(upgrade.stderr, file=sys.stderr)
+        return upgrade.returncode
+    print("alembic upgrade head aplicado sobre el dump.")
+
+    # 4) Fijar contrasenas conocidas y nombre visible de los tres usuarios demo.
     get_session_factory.cache_clear()
     with session_scope() as s:
-        new_hash = _hash_password(DEMO_PASSWORD)
-        for email in DEMO_EMAILS:
+        for email, name in DEMO_USERS:
             s.execute(
-                text("UPDATE users SET password_hash = :hash WHERE email = :email"),
-                {"hash": _hash_password(DEMO_PASSWORD), "email": email},
+                text("UPDATE users SET password_hash = :hash, display_name = :name WHERE email = :email"),
+                {"hash": _hash_password(DEMO_PASSWORD), "name": name, "email": email},
             )
     print(f"Contrasena comun fijada: {DEMO_PASSWORD}")
-    for email in DEMO_EMAILS:
-        print(f"  {email}")
+    for email, name in DEMO_USERS:
+        print(f"  {email} ({name})")
     return 0
 
 

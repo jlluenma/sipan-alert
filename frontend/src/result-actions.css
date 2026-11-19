@@ -1,0 +1,52 @@
+.result-action-card {
+  padding: 18px;
+  margin: 16px 0;
+  border: 1px solid #e4e7ec;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.result-action-card h2 { margin: 0 0 8px; }
+.result-action-card p { margin: 8px 0; }
+.result-action-card small { color: #475467; }
+.result-action-card a { color: #a8181e; }
+.result-action-card ol { padding-inline-start: 24px; }
+.result-action-card ol li + li { margin-top: 8px; }
+
+.result-match-labels,
+.result-situations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+}
+
+.result-match-labels { list-style: none; }
+
+.result-match-labels li,
+.result-situations button {
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #f5f6f8;
+  color: #344054;
+}
+
+.result-situations button {
+  min-height: 42px;
+  border: 1px solid #e4e7ec;
+  font-weight: 650;
+}
+
+.result-situations button[aria-pressed='true'] {
+  border-color: #ebacad;
+  background: #fff0f0;
+  color: #a8181e;
+}
+
+.result-download {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}

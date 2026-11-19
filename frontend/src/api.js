@@ -1,5 +1,9 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8015/api'
 
+export function communityPhotoUrl(postId, position, moderation) {
+  return `${BASE_URL}/community/${postId}/photos/${position}${moderation ? '/preview' : ''}`
+}
+
 export async function request(path, options = {}) {
   const response = await fetch(`${BASE_URL}${path}`, {
     credentials: 'include',

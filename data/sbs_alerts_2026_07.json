@@ -1,0 +1,24 @@
+{
+  "title": "SBS advierte sobre entidades que captan dinero del público sin autorización y aplicativos informales que ofrecen préstamos de dinero",
+  "source": "https://www.sbs.gob.pe/noticia/detallenoticia/idnoticia/3960",
+  "published_at": "2026-07-21",
+  "reviewed_at": "2026-11-18",
+  "evidence_context": "La SBS incluye esta app en un listado preventivo y describe solicitudes de acceso a contactos, fotos y videos, así como reportes de cobros elevados y amenazas durante la cobranza.",
+  "company_context": "La SBS incluye esta entidad en el listado de su comunicado sobre captación de dinero del público sin autorización.",
+  "app_recommendation": "La SBS recomienda evitar la descarga y el uso de las aplicaciones incluidas en este comunicado.",
+  "entities": [
+    {"name":"Creditopyme Cooperando S.A.C.","aliases":["Financiera Cooperando"],"kind":"empresa"},
+    {"name":"Inversiones Consultora S.A.","aliases":["Consultora Solución Financiera"],"kind":"empresa"},
+    {"name":"Cooperativa de Ahorro y Crédito La Troyca","aliases":["Coopac La Troyca"],"kind":"empresa"},
+    {"name":"Sol Dinero - Prestamos Peru","aliases":["Sol Dinero"],"package":"sol.dinero.prestamos.peru.efectivo.rapido.telecredito"},
+    {"name":"Micro Dinero - PE Préstamos YA","aliases":["Micro Dinero"],"package":"com.pe.microdinero.finanzas"},
+    {"name":"Platapro - Préstamo","aliases":["Platapro"],"package":"com.platapro.cashservice.supermarket.peru"},
+    {"name":"Acreditaya-préstamo fácil","aliases":["Acreditaya"],"package":"com.acredi.taya.app.mobile"},
+    {"name":"Rapisoles-Préstamos","aliases":["Rapisoles"],"package":"rapi.soles.sol.cred.ito.pres"},
+    {"name":"PagaFácilito","aliases":[],"package":"com.creditbyte.pagafacilito"},
+    {"name":"AndinoCash-prestamos peru","aliases":["AndinoCash"],"package":"com.andinocash.prestamos"},
+    {"name":"FlujoCash-Prestamos Peru&Money","aliases":["FlujoCash"],"package":"com.tool.cash.flujo"},
+    {"name":"Chambasol- Dinero Rápido","aliases":["Chambasol"],"package":"com.chambasol.prestamo.peru"},
+    {"name":"Moni Amigo - Préstamos","aliases":["Moni Amigo"],"package":"com.chambasol.prestamo.peru"}
+  ]
+}

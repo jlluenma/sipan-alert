@@ -1,0 +1,20 @@
+{
+  "com.chambasol.prestamo.peru": [
+    {
+      "title": "Chambasol- Dinero Rápido",
+      "publisher": "Intermediapp S.A.C.S.",
+      "source": "Google Play · ficha del desarrollador",
+      "url": "https://play.google.com/store/apps/details?id=com.chambasol.prestamo.peru&hl=es_PE",
+      "updatedAt": "2026-08-05",
+      "description": "El desarrollador presenta Chambasol como una aplicación de préstamos en línea dirigida a usuarios en Perú.",
+      "terms": [
+        {"label": "Montos anunciados", "value": "S/ 100 a S/ 3 000"},
+        {"label": "Plazo anunciado", "value": "120 a 150 días"},
+        {"label": "Interés anunciado", "value": "0,04 % diario"},
+        {"label": "Cargo por servicio anunciado", "value": "9 %"}
+      ],
+      "example": "La ficha muestra un ejemplo de S/ 3 000 a 150 días, con S/ 180 de intereses y S/ 270 de cargo por servicio. Total del ejemplo: S/ 3 450.",
+      "dataDisclosure": "En Seguridad de los datos, el desarrollador declara que la app podría recopilar ubicación e información personal, entre otros tipos de datos."
+    }
+  ]
+}
